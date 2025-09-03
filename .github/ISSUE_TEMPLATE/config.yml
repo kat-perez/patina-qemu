@@ -1,0 +1,10 @@
+# Patina GitHub Issue Configuration File
+#
+# Copyright (c) Microsoft Corporation.
+# SPDX-License-Identifier: BSD-2-Clause-Patent
+#
+
+contact_links:
+  - name: 📃 Patina Documentation
+    url: https://github.com/OpenDevicePartnership/patina
+    about: Goals, principles, repo layout, build instructions, and more.

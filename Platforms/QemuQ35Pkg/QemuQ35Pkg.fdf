@@ -1,0 +1,888 @@
+## @file
+#  Open Virtual Machine Firmware for Q35 VM using Patina: FDF
+#
+#  Copyright(c) Microsoft Corporation
+#  Copyright (c) 2006 - 2019, Intel Corporation. All rights reserved.<BR>
+#  (C) Copyright 2016 Hewlett Packard Enterprise Development LP<BR>
+#
+#  SPDX-License-Identifier: BSD-2-Clause-Patent
+#
+##
+
+################################################################################
+
+[Defines]
+DEFINE BLOCK_SIZE        = 0x1000
+
+DEFINE VARS_SIZE         = 0x84000
+DEFINE VARS_BLOCKS       = 0x84
+DEFINE VARS_LIVE_SIZE    = 0x40000
+DEFINE VARS_SPARE_SIZE   = 0x42000
+
+DEFINE FW_BASE_ADDRESS   = 0xFFC00000
+DEFINE FW_SIZE           = 0x00400000
+DEFINE FW_BLOCKS         = 0x400
+DEFINE CODE_BASE_ADDRESS = 0xFFC84000
+DEFINE CODE_SIZE         = 0x0037C000
+DEFINE CODE_BLOCKS       = 0x37C
+DEFINE FVMAIN_SIZE       = 0x00348000
+DEFINE SECFV_OFFSET      = 0x003CC000
+DEFINE SECFV_SIZE        = 0x34000
+
+
+SET gUefiQemuQ35PkgTokenSpaceGuid.PcdOvmfFdBaseAddress     = $(FW_BASE_ADDRESS)
+SET gUefiQemuQ35PkgTokenSpaceGuid.PcdOvmfFirmwareFdSize    = $(FW_SIZE)
+SET gUefiQemuQ35PkgTokenSpaceGuid.PcdOvmfFirmwareBlockSize = $(BLOCK_SIZE)
+
+SET gUefiQemuQ35PkgTokenSpaceGuid.PcdOvmfFlashNvStorageVariableBase = $(FW_BASE_ADDRESS)
+SET gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageVariableSize = $(VARS_LIVE_SIZE)
+
+SET gUefiQemuQ35PkgTokenSpaceGuid.PcdOvmfFlashNvStorageEventLogBase = gUefiQemuQ35PkgTokenSpaceGuid.PcdOvmfFlashNvStorageVariableBase + gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageVariableSize
+SET gUefiQemuQ35PkgTokenSpaceGuid.PcdOvmfFlashNvStorageEventLogSize = $(BLOCK_SIZE)
+
+SET gUefiQemuQ35PkgTokenSpaceGuid.PcdOvmfFlashNvStorageFtwWorkingBase = gUefiQemuQ35PkgTokenSpaceGuid.PcdOvmfFlashNvStorageEventLogBase + gUefiQemuQ35PkgTokenSpaceGuid.PcdOvmfFlashNvStorageEventLogSize
+SET gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwWorkingSize = $(BLOCK_SIZE)
+
+SET gUefiQemuQ35PkgTokenSpaceGuid.PcdOvmfFlashNvStorageFtwSpareBase = gUefiQemuQ35PkgTokenSpaceGuid.PcdOvmfFlashNvStorageFtwWorkingBase + gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwWorkingSize
+SET gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwSpareSize = $(VARS_SPARE_SIZE)
+
+SET gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageVariableBase64 = gUefiQemuQ35PkgTokenSpaceGuid.PcdOvmfFlashNvStorageVariableBase
+SET gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwWorkingBase = gUefiQemuQ35PkgTokenSpaceGuid.PcdOvmfFlashNvStorageFtwWorkingBase
+SET gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwSpareBase   = gUefiQemuQ35PkgTokenSpaceGuid.PcdOvmfFlashNvStorageFtwSpareBase
+
+DEFINE MEMFD_BASE_ADDRESS = 0x800000
+
+
+#
+# Build the variable store and the firmware code as separate flash device
+# images.
+#
+[FD.QEMUQ35_VARS]
+BaseAddress   = $(FW_BASE_ADDRESS)
+Size          = $(VARS_SIZE)
+ErasePolarity = 1
+BlockSize     = $(BLOCK_SIZE)
+NumBlocks     = $(VARS_BLOCKS)
+
+0x00000000|0x00040000
+#NV_VARIABLE_STORE
+DATA = {
+  ## This is the EFI_FIRMWARE_VOLUME_HEADER
+  # ZeroVector []
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  # FileSystemGuid: gEfiSystemNvDataFvGuid         =
+  #   { 0xFFF12B8D, 0x7696, 0x4C8B,
+  #     { 0xA9, 0x85, 0x27, 0x47, 0x07, 0x5B, 0x4F, 0x50 }}
+  0x8D, 0x2B, 0xF1, 0xFF, 0x96, 0x76, 0x8B, 0x4C,
+  0xA9, 0x85, 0x27, 0x47, 0x07, 0x5B, 0x4F, 0x50,
+  # FvLength: 0x84000
+  0x00, 0x40, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00,
+  # Signature "_FVH"       # Attributes
+  0x5f, 0x46, 0x56, 0x48, 0xff, 0xfe, 0x04, 0x00,
+  # HeaderLength
+  0x48, 0x00,
+  # CheckSum
+  0xAF, 0xB8,
+  # ExtHeaderOffset #Reserved #Revision
+  0x00, 0x00, 0x00, 0x02,
+  # Blockmap[0]: 0x84 Blocks * 0x1000 Bytes / Block
+  0x84, 0x00, 0x00, 0x00, 0x00, 0x10, 0x00, 0x00,
+  # Blockmap[1]: End
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  ## This is the VARIABLE_STORE_HEADER
+  # It is compatible with SECURE_BOOT_ENABLE == FALSE as well.
+  # Signature: gEfiAuthenticatedVariableGuid =
+  #   { 0xaaf32c78, 0x947b, 0x439a,
+  #     { 0xa1, 0x80, 0x2e, 0x14, 0x4e, 0xc3, 0x77, 0x92 }}
+  0x78, 0x2c, 0xf3, 0xaa, 0x7b, 0x94, 0x9a, 0x43,
+  0xa1, 0x80, 0x2e, 0x14, 0x4e, 0xc3, 0x77, 0x92,
+  # Size: 0x40000 (gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageVariableSize) -
+  #          0x48 (size of EFI_FIRMWARE_VOLUME_HEADER) = 0x3ffb8
+  # This can speed up the Variable Dispatch a bit.
+  0xB8, 0xFF, 0x03, 0x00,
+  # FORMATTED: 0x5A #HEALTHY: 0xFE #Reserved: UINT16 #Reserved1: UINT32
+  0x5A, 0xFE, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+}
+
+
+
+0x00040000|0x00001000
+#NV_EVENT_LOG
+
+0x00041000|0x00001000
+#NV_FTW_WORKING
+DATA = {
+  # EFI_FAULT_TOLERANT_WORKING_BLOCK_HEADER->Signature = gEdkiiWorkingBlockSignatureGuid         =
+  #  { 0x9e58292b, 0x7c68, 0x497d, { 0xa0, 0xce, 0x65,  0x0, 0xfd, 0x9f, 0x1b, 0x95 }}
+  0x2b, 0x29, 0x58, 0x9e, 0x68, 0x7c, 0x7d, 0x49,
+  0xa0, 0xce, 0x65,  0x0, 0xfd, 0x9f, 0x1b, 0x95,
+  # Crc:UINT32            #WorkingBlockValid:1, WorkingBlockInvalid:1, Reserved
+  0x2c, 0xaf, 0x2c, 0x64, 0xFE, 0xFF, 0xFF, 0xFF,
+  # WriteQueueSize: UINT64
+  0xE0, 0x0F, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+}
+
+0x00042000|0x00042000
+#NV_FTW_SPARE
+
+
+[FD.QEMUQ35_CODE]
+BaseAddress   = $(CODE_BASE_ADDRESS)
+Size          = $(CODE_SIZE)
+ErasePolarity = 1
+BlockSize     = $(BLOCK_SIZE)
+NumBlocks     = $(CODE_BLOCKS)
+
+0x00000000|$(FVMAIN_SIZE)
+FV = FVMAIN_COMPACT
+
+$(FVMAIN_SIZE)|$(SECFV_SIZE)
+FV = SECFV
+
+################################################################################
+
+[FD.MEMFD]
+BaseAddress   = $(MEMFD_BASE_ADDRESS)
+Size          = 0xD00000
+ErasePolarity = 1
+BlockSize     = 0x10000
+NumBlocks     = 0xD0
+
+0x000000|0x006000
+gUefiQemuQ35PkgTokenSpaceGuid.PcdOvmfSecPageTablesBase|gUefiQemuQ35PkgTokenSpaceGuid.PcdOvmfSecPageTablesSize
+
+0x006000|0x001000
+gEfiMdePkgTokenSpaceGuid.PcdGuidedExtractHandlerTableAddress|gUefiQemuQ35PkgTokenSpaceGuid.PcdGuidedExtractHandlerTableSize
+
+0x010000|0x010000
+gUefiQemuQ35PkgTokenSpaceGuid.PcdSecPeiTemporaryRamBase|gUefiQemuQ35PkgTokenSpaceGuid.PcdSecPeiTemporaryRamSize
+
+0x020000|0x0E0000
+gUefiQemuQ35PkgTokenSpaceGuid.PcdOvmfPeiMemFvBase|gUefiQemuQ35PkgTokenSpaceGuid.PcdOvmfPeiMemFvSize
+FV = PEIFV
+
+0x100000|0xA00000
+gUefiQemuQ35PkgTokenSpaceGuid.PcdOvmfDxeMemFvBase|gUefiQemuQ35PkgTokenSpaceGuid.PcdOvmfDxeMemFvSize
+FV = DXEFV
+
+0xB00000|0x200000
+gUefiQemuQ35PkgTokenSpaceGuid.PcdOvmfRustDxeMemFvBase|gUefiQemuQ35PkgTokenSpaceGuid.PcdOvmfRustDxeMemFvSize
+FV = RUST_DXE_CORE
+
+################################################################################
+
+[FV.SECFV]
+FvNameGuid         = 763BED0D-DE9F-48F5-81F1-3E90E1B1A015
+BlockSize          = 0x1000
+FvAlignment        = 16
+ERASE_POLARITY     = 1
+MEMORY_MAPPED      = TRUE
+STICKY_WRITE       = TRUE
+LOCK_CAP           = TRUE
+LOCK_STATUS        = TRUE
+WRITE_DISABLED_CAP = TRUE
+WRITE_ENABLED_CAP  = TRUE
+WRITE_STATUS       = TRUE
+WRITE_LOCK_CAP     = TRUE
+WRITE_LOCK_STATUS  = TRUE
+READ_DISABLED_CAP  = TRUE
+READ_ENABLED_CAP   = TRUE
+READ_STATUS        = TRUE
+READ_LOCK_CAP      = TRUE
+READ_LOCK_STATUS   = TRUE
+
+#
+# SEC Phase modules
+#
+# The code in this FV handles the initial firmware startup, and
+# decompresses the PEI and DXE FVs which handles the rest of the boot sequence.
+#
+INF  QemuQ35Pkg/Sec/SecMain.inf
+
+INF  RuleOverride=RESET_VECTOR QemuQ35Pkg/ResetVector/ResetVector.inf
+
+################################################################################
+[FV.PEIFV]
+FvNameGuid         = 6938079B-B503-4E3D-9D24-B28337A25806
+BlockSize          = 0x10000
+FvAlignment        = 16
+ERASE_POLARITY     = 1
+MEMORY_MAPPED      = TRUE
+STICKY_WRITE       = TRUE
+LOCK_CAP           = TRUE
+LOCK_STATUS        = TRUE
+WRITE_DISABLED_CAP = TRUE
+WRITE_ENABLED_CAP  = TRUE
+WRITE_STATUS       = TRUE
+WRITE_LOCK_CAP     = TRUE
+WRITE_LOCK_STATUS  = TRUE
+READ_DISABLED_CAP  = TRUE
+READ_ENABLED_CAP   = TRUE
+READ_STATUS        = TRUE
+READ_LOCK_CAP      = TRUE
+READ_LOCK_STATUS   = TRUE
+
+#
+#  PEI Phase modules
+#
+INF  MdeModulePkg/Core/Pei/PeiMain.inf
+INF  MdeModulePkg/Universal/PCD/Pei/Pcd.inf
+INF  MdeModulePkg/Universal/ReportStatusCodeRouter/Pei/ReportStatusCodeRouterPei.inf
+INF  MdeModulePkg/Universal/StatusCodeHandler/Pei/StatusCodeHandlerPei.inf
+INF  SecurityPkg/RandomNumberGenerator/RngPei/RngPei.inf
+INF  QemuQ35Pkg/PlatformPei/PlatformPei.inf
+INF  MdeModulePkg/Core/DxeIplPeim/DxeIpl.inf
+
+INF  MdeModulePkg/Universal/FaultTolerantWritePei/FaultTolerantWritePei.inf
+INF  MdeModulePkg/Universal/Variable/Pei/VariablePei.inf
+
+!if $(SMM_ENABLED) == TRUE
+INF  QemuQ35Pkg/SmmAccess/SmmAccessPei.inf
+INF  MmSupervisorPkg/Drivers/StandaloneMmHob/StandaloneMmHob.inf
+INF  MmSupervisorPkg/Drivers/MmCommunicationBuffer/MmCommunicationBufferPei.inf
+!endif
+
+INF  UefiCpuPkg/CpuMpPei/CpuMpPei.inf
+
+!if $(TPM_ENABLE) == TRUE
+!if $(TPM_REPLAY_ENABLED) == TRUE
+INF  TpmTestingPkg/TpmReplayPei/Pei/TpmReplayPei.inf
+!endif
+INF  QemuPkg/Tcg/Tcg2Config/Tcg2ConfigPei.inf
+INF  SecurityPkg/Tcg/Tcg2Pei/Tcg2Pei.inf
+!endif
+
+INF  MdeModulePkg/Universal/ResetSystemPei/ResetSystemPei.inf
+INF  MsCorePkg/Universal/StatusCodeHandler/Serial/Pei/SerialStatusCodeHandlerPei.inf
+INF  MsCorePkg/Core/GuidedSectionExtractPeim/GuidedSectionExtract.inf
+INF  MsWheaPkg/MsWheaReport/Pei/MsWheaReportPei.inf
+INF  OemPkg/DeviceStatePei/DeviceStatePei.inf
+INF  MfciPkg/MfciPei/MfciPei.inf
+
+INF  MsGraphicsPkg/MsUiTheme/Pei/MsUiThemePpi.inf
+INF  MsGraphicsPkg/MsEarlyGraphics/Pei/MsEarlyGraphics.inf
+INF  MdeModulePkg/Universal/Acpi/FirmwarePerformanceDataTablePei/FirmwarePerformancePei.inf
+
+INF  PolicyServicePkg/PolicyService/Pei/PolicyPei.inf
+INF  QemuQ35Pkg/ConfigKnobs/ConfigKnobs.inf
+INF  OemPkg/OemConfigPolicyCreatorPei/OemConfigPolicyCreatorPei.inf
+
+INF  DebuggerFeaturePkg/DebugConfigPei/DebugConfigPei.inf
+
+!include $(SHARED_CRYPTO_PATH)/Driver/Bin/CryptoDriver.PEI.inc.fdf
+
+################################################################################
+#
+# The DXEFV firmware volume contains all of the binary modules necessary to boot
+# the DXE phase with the exception of the pre-compiled DXE core driver which will
+# be placed in the [FV.RUST_DXE_CORE] firmware volume.
+#
+################################################################################
+
+[FV.DXEFV]
+FvForceRebase      = FALSE
+FvNameGuid         = 7CB8BDC9-F8EB-4F34-AAEA-3EE4AF6516A1
+BlockSize          = 0x10000
+FvAlignment        = 16
+ERASE_POLARITY     = 1
+MEMORY_MAPPED      = TRUE
+STICKY_WRITE       = TRUE
+LOCK_CAP           = TRUE
+LOCK_STATUS        = TRUE
+WRITE_DISABLED_CAP = TRUE
+WRITE_ENABLED_CAP  = TRUE
+WRITE_STATUS       = TRUE
+WRITE_LOCK_CAP     = TRUE
+WRITE_LOCK_STATUS  = TRUE
+READ_DISABLED_CAP  = TRUE
+READ_ENABLED_CAP   = TRUE
+READ_STATUS        = TRUE
+READ_LOCK_CAP      = TRUE
+READ_LOCK_STATUS   = TRUE
+
+#
+# Use externally built Rust DXE core binary
+#
+
+INF  MdeModulePkg/Universal/PCD/Dxe/Pcd.inf
+
+!if $(BUILD_RUST_CODE) == TRUE
+# Simple pure Rust DXE driver that is loaded by Rust DXE Core
+INF  QemuQ35Pkg/RustDriverDxe/RustDriverDxe.inf
+
+# Simple C Test DXE driver used to test Rust DXE Core FFI interfaces.
+INF  QemuQ35Pkg/RustFfiTestDxe/RustFfiTestDxe.inf
+INF  QemuQ35Pkg/RustFfiImageTestDxe/RustFfiImageTestDxe.inf
+!endif
+
+INF  MdeModulePkg/Universal/ReportStatusCodeRouter/RuntimeDxe/ReportStatusCodeRouterRuntimeDxe.inf
+INF  MdeModulePkg/Universal/StatusCodeHandler/RuntimeDxe/StatusCodeHandlerRuntimeDxe.inf
+
+# Equivalent functionality is in DxeRust
+# INF  MdeModulePkg/Core/RuntimeDxe/RuntimeDxe.inf
+INF  MdeModulePkg/Universal/SecurityStubDxe/SecurityStubDxe.inf
+
+INF  QemuQ35Pkg/8259InterruptControllerDxe/8259.inf
+INF  UefiCpuPkg/CpuIo2Dxe/CpuIo2Dxe.inf
+# INF  UefiCpuPkg/CpuDxe/CpuDxe.inf
+INF  UefiCpuPkg/MpDxe/MpDxe.inf
+INF  QemuQ35Pkg/8254TimerDxe/8254Timer.inf
+INF  QemuQ35Pkg/IncompatiblePciDeviceSupportDxe/IncompatiblePciDeviceSupport.inf
+INF  QemuPkg/PciHotPlugInitDxe/PciHotPlugInit.inf
+INF  MdeModulePkg/Bus/Pci/PciHostBridgeDxe/PciHostBridgeDxe.inf
+INF  MdeModulePkg/Bus/Pci/PciBusDxe/PciBusDxe.inf
+INF  MdeModulePkg/Universal/ResetSystemRuntimeDxe/ResetSystemRuntimeDxe.inf
+INF  MdeModulePkg/Universal/Metronome/Metronome.inf
+INF  MdeModulePkg/Universal/DevicePathDxe/DevicePathDxe.inf
+INF  PcAtChipsetPkg/PcatRealTimeClockRuntimeDxe/PcatRealTimeClockRuntimeDxe.inf
+
+# CPU branding information
+INF  QemuQ35Pkg/CpuInfoDxe/CpuInfoDxe.inf
+
+INF  QemuPkg/VirtioPciDeviceDxe/VirtioPciDeviceDxe.inf
+INF  QemuPkg/Virtio10Dxe/Virtio10.inf
+INF  QemuPkg/VirtioBlkDxe/VirtioBlk.inf
+INF  QemuPkg/VirtioScsiDxe/VirtioScsi.inf
+INF  QemuPkg/VirtioRngDxe/VirtioRng.inf
+
+# Rng Protocol producer
+INF  SecurityPkg/RandomNumberGenerator/RngDxe/RngDxe.inf
+
+INF  MdeModulePkg/Universal/WatchdogTimerDxe/WatchdogTimer.inf
+INF  MdeModulePkg/Universal/MonotonicCounterRuntimeDxe/MonotonicCounterRuntimeDxe.inf
+INF  MdeModulePkg/Universal/CapsuleRuntimeDxe/CapsuleRuntimeDxe.inf
+INF  MdeModulePkg/Universal/Console/ConPlatformDxe/ConPlatformDxe.inf
+INF  MdeModulePkg/Universal/Console/ConSplitterDxe/ConSplitterDxe.inf
+INF  MdeModulePkg/Universal/Console/GraphicsConsoleDxe/GraphicsConsoleDxe.inf
+!if $(DEBUGGER_ENABLED) == FALSE
+INF  MdeModulePkg/Universal/Console/TerminalDxe/TerminalDxe.inf
+!endif
+INF  MdeModulePkg/Universal/DriverHealthManagerDxe/DriverHealthManagerDxe.inf
+INF  MdeModulePkg/Universal/BdsDxe/BdsDxe.inf
+# MU_CHANGE
+#INF  MdeModulePkg/Application/UiApp/UiApp.inf
+INF  QemuQ35Pkg/QemuKernelLoaderFsDxe/QemuKernelLoaderFsDxe.inf
+INF  MdeModulePkg/Universal/PrintDxe/PrintDxe.inf
+INF  MdeModulePkg/Universal/Disk/DiskIoDxe/DiskIoDxe.inf
+INF  MdeModulePkg/Universal/Disk/PartitionDxe/PartitionDxe.inf
+INF  MdeModulePkg/Universal/Disk/RamDiskDxe/RamDiskDxe.inf
+INF  MdeModulePkg/Universal/Disk/UnicodeCollation/EnglishDxe/EnglishDxe.inf
+INF  MdeModulePkg/Bus/Scsi/ScsiBusDxe/ScsiBusDxe.inf
+INF  MdeModulePkg/Bus/Scsi/ScsiDiskDxe/ScsiDiskDxe.inf
+INF  QemuPkg/SataControllerDxe/SataControllerDxe.inf
+INF  MdeModulePkg/Bus/Ata/AtaAtapiPassThru/AtaAtapiPassThru.inf
+INF  MdeModulePkg/Bus/Ata/AtaBusDxe/AtaBusDxe.inf
+INF  MdeModulePkg/Bus/Pci/NvmExpressDxe/NvmExpressDxe.inf
+INF  MdeModulePkg/Universal/HiiDatabaseDxe/HiiDatabaseDxe.inf
+INF  MdeModulePkg/Universal/SetupBrowserDxe/SetupBrowserDxe.inf
+INF  MdeModulePkg/Universal/MemoryTest/NullMemoryTestDxe/NullMemoryTestDxe.inf
+
+INF  QemuQ35Pkg/SioBusDxe/SioBusDxe.inf
+INF  MdeModulePkg/Bus/Isa/Ps2KeyboardDxe/Ps2KeyboardDxe.inf
+
+INF  MdeModulePkg/Universal/SmbiosDxe/SmbiosDxe.inf
+INF  QemuQ35Pkg/SmbiosPlatformDxe/SmbiosPlatformDxe.inf
+
+INF  MdeModulePkg/Universal/Acpi/AcpiTableDxe/AcpiTableDxe.inf
+INF  QemuQ35Pkg/AcpiPlatformDxe/AcpiPlatformDxe.inf
+INF  MdeModulePkg/Universal/Acpi/BootGraphicsResourceTableDxe/BootGraphicsResourceTableDxe.inf
+
+INF  FatPkg/EnhancedFatDxe/Fat.inf
+INF  MdeModulePkg/Universal/Disk/UdfDxe/UdfDxe.inf
+
+INF  ShellPkg/DynamicCommand/TftpDynamicCommand/TftpDynamicCommand.inf
+INF  ShellPkg/DynamicCommand/HttpDynamicCommand/HttpDynamicCommand.inf
+INF  ShellPkg/DynamicCommand/VariablePolicyDynamicCommand/VariablePolicyDynamicCommand.inf
+INF  QemuPkg/LinuxInitrdDynamicShellCommand/LinuxInitrdDynamicShellCommand.inf
+
+#
+# Network modules
+#
+!if $(E1000_ENABLE)
+  FILE DRIVER = 5D695E11-9B3F-4b83-B25F-4A8D5D69BE07 {
+    SECTION PE32 = Intel3.5/EFIX64/E3522X2.EFI
+  }
+!endif
+
+
+  INF  NetworkPkg/DpcDxe/DpcDxe.inf
+  INF  NetworkPkg/SnpDxe/SnpDxe.inf
+  INF  NetworkPkg/MnpDxe/MnpDxe.inf
+
+  INF  NetworkPkg/ArpDxe/ArpDxe.inf
+  INF  NetworkPkg/Dhcp4Dxe/Dhcp4Dxe.inf
+  INF  NetworkPkg/Ip4Dxe/Ip4Dxe.inf
+  INF  NetworkPkg/Udp4Dxe/Udp4Dxe.inf
+  INF  NetworkPkg/Mtftp4Dxe/Mtftp4Dxe.inf
+  INF  NetworkPkg/Dhcp6Dxe/Dhcp6Dxe.inf
+  INF  NetworkPkg/Ip6Dxe/Ip6Dxe.inf
+  INF  NetworkPkg/Udp6Dxe/Udp6Dxe.inf
+  INF  NetworkPkg/Mtftp6Dxe/Mtftp6Dxe.inf
+  INF  NetworkPkg/TcpDxe/TcpDxe.inf
+  INF  NetworkPkg/UefiPxeBcDxe/UefiPxeBcDxe.inf
+
+  INF  PolicyServicePkg/PolicyService/DxeMm/PolicyDxe.inf
+  INF  SetupDataPkg/ConfApp/ConfApp.inf
+
+  INF  NetworkPkg/TlsDxe/TlsDxe.inf
+  INF  NetworkPkg/DnsDxe/DnsDxe.inf
+  INF  NetworkPkg/HttpDxe/HttpDxe.inf
+  INF  NetworkPkg/HttpUtilitiesDxe/HttpUtilitiesDxe.inf
+  INF  NetworkPkg/HttpBootDxe/HttpBootDxe.inf
+
+  INF  QemuPkg/VirtioNetDxe/VirtioNet.inf
+
+#
+# Usb Support
+#
+INF  MdeModulePkg/Bus/Pci/UhciDxe/UhciDxe.inf
+INF  MdeModulePkg/Bus/Pci/EhciDxe/EhciDxe.inf
+INF  MdeModulePkg/Bus/Pci/XhciDxe/XhciDxe.inf
+INF  MdeModulePkg/Bus/Usb/UsbBusDxe/UsbBusDxe.inf
+INF  MdeModulePkg/Bus/Usb/UsbKbDxe/UsbKbDxe.inf
+INF  MdeModulePkg/Bus/Usb/UsbMassStorageDxe/UsbMassStorageDxe.inf
+
+INF  QemuQ35Pkg/QemuVideoDxe/QemuVideoDxe.inf
+
+INF  QemuQ35Pkg/QemuRamfbDxe/QemuRamfbDxe.inf
+INF  QemuQ35Pkg/IoMmuDxe/IoMmuDxe.inf
+
+!if $(SMM_ENABLED) == TRUE
+INF  QemuQ35Pkg/SmmControl2Dxe/SmmControl2Dxe.inf
+!if $(PEI_MM_IPL_ENABLED) == TRUE
+  INF  QemuQ35Pkg/SmmControl2Dxe/MmControlPei.inf
+  INF  MmSupervisorPkg/Drivers/MmPeiLaunchers/MmIplPei.inf
+  INF  MmSupervisorPkg/Drivers/MmPeiLaunchers/MmIplX64Relay.inf
+  INF  MmSupervisorPkg/Drivers/MmPeiLaunchers/MmDxeSupport.inf
+!else
+  INF  QemuQ35Pkg/SmmAccess/SmmAccess2Dxe.inf
+  INF  MmSupervisorPkg/Drivers/StandaloneMmIpl/PiSmmIpl.inf
+!endif
+INF  MmSupervisorPkg/Core/MmSupervisorCore.inf
+INF  UefiCpuPkg/CpuIo2Smm/CpuIo2StandaloneMm.inf
+!endif
+
+#
+# Variable driver stack (SMM)
+#
+!if $(SMM_ENABLED) == TRUE
+INF  QemuQ35Pkg/QemuFlashFvbServicesRuntimeDxe/FvbServicesStandaloneMm.inf
+INF  MdeModulePkg/Universal/FaultTolerantWriteDxe/FaultTolerantWriteStandaloneMm.inf
+INF  MdeModulePkg/Universal/Variable/RuntimeDxe/VariableStandaloneMm.inf
+INF  MdeModulePkg/Universal/Variable/RuntimeDxe/VariableSmmRuntimeDxe.inf
+!else
+INF  MdeModulePkg/Universal/FaultTolerantWriteDxe/FaultTolerantWriteDxe.inf
+INF  MdeModulePkg/Universal/Variable/RuntimeDxe/VariableRuntimeDxe.inf
+!endif
+
+#
+# TPM support
+#
+!if $(TPM_ENABLE) == TRUE
+!if $(TPM_REPLAY_ENABLED) == TRUE
+INF  TpmTestingPkg/Overrides/Tcg2Dxe/Tcg2Dxe.inf
+!else
+INF  SecurityPkg/Tcg/Tcg2Dxe/Tcg2Dxe.inf
+!endif
+!if $(TPM_CONFIG_ENABLE) == TRUE
+INF  SecurityPkg/Tcg/Tcg2Config/Tcg2ConfigDxe.inf
+!endif
+!endif
+
+INF  AdvLoggerPkg/AdvancedFileLogger/AdvancedFileLogger.inf
+INF  MsCorePkg/Universal/StatusCodeHandler/Serial/Dxe/SerialStatusCodeHandlerDxe.inf
+INF  MsCorePkg/MuCryptoDxe/MuCryptoDxe.inf
+INF  MdeModulePkg/Universal/Acpi/FirmwarePerformanceDataTableDxe/FirmwarePerformanceDxe.inf
+INF  MsGraphicsPkg/MsEarlyGraphics/Dxe/MsEarlyGraphics.inf
+INF  MsWheaPkg/MsWheaReport/Dxe/MsWheaReportDxe.inf
+INF  MsWheaPkg/MsWheaReport/Smm/MsWheaReportStandaloneMm.inf
+INF  MdeModulePkg/Universal/ReportStatusCodeRouter/Smm/ReportStatusCodeRouterStandaloneMm.inf
+INF  MdeModulePkg/Universal/Acpi/FirmwarePerformanceDataTableSmm/FirmwarePerformanceStandaloneMm.inf
+INF  MsCorePkg/MuVarPolicyFoundationDxe/MuVarPolicyFoundationDxe.inf
+INF MsCorePkg/LoadOptionVariablePolicyDxe/LoadOptionVariablePolicyDxe.inf
+!if $(SMM_ENABLED) == TRUE
+INF  MmSupervisorPkg/Drivers/MmSupervisorRing3Broker/MmSupervisorRing3Broker.inf
+INF  MmSupervisorPkg/Drivers/StandaloneMmUnblockMem/StandaloneMmUnblockMem.inf
+!if $(PERF_TRACE_ENABLE) == TRUE
+INF  MmSupervisorPkg/Drivers/MmSupervisorRing3Performance/MmSupervisorRing3Performance.inf
+!endif
+!endif
+# INF RuleOverride = DRIVER_ACPITABLE SecurityPkg/Tcg/Tcg2Smm/Tcg2Smm.inf
+# COMMENTED OUT DUE TO LACK OF TPM
+# INF  SecurityPkg/Tcg/MemoryOverwriteControl/TcgMor.inf
+INF  MdeModulePkg/Universal/EsrtFmpDxe/EsrtFmpDxe.inf
+!if $(BUILD_RUST_CODE) == TRUE
+INF  HidPkg/UsbHidDxe/UsbHidDxe.inf
+INF  HidPkg/UefiHidDxe/UefiHidDxe.inf
+# Remove for space and functionality considerations
+#INF  MsCorePkg/HelloWorldRustDxe/HelloWorldRustDxe.inf
+!else
+INF  MdeModulePkg/Bus/Usb/UsbMouseAbsolutePointerDxe/UsbMouseAbsolutePointerDxe.inf
+!endif
+INF  DfciPkg/Application/DfciMenu/DfciMenu.inf
+INF  MsGraphicsPkg/PrintScreenLogger/PrintScreenLogger.inf
+INF  SecurityPkg/Hash2DxeCrypto/Hash2DxeCrypto.inf
+INF  MsCorePkg/AcpiRGRT/AcpiRgrt.inf
+
+!if $(SMM_ENABLED) == TRUE
+  !include $(SHARED_CRYPTO_PATH)/Driver/Bin/CryptoDriver.DXE.inc.fdf
+  !include $(SHARED_CRYPTO_PATH)/Driver/Bin/CryptoDriver.STANDALONEMM_MMSUPV.inc.fdf
+!else
+  !include $(SHARED_CRYPTO_PATH)/Driver/Bin/CryptoDriver.RUNTIMEDXE.inc.fdf
+!endif
+
+!if $(BUILD_UNIT_TESTS) == TRUE
+  # INF UefiTestingPkg/FunctionalSystemTests/SmmPagingProtectionsTest/Smm/SmmPagingProtectionsTestStandaloneMm.inf # NOT YET SUPPORTED
+!if $(SMM_ENABLED) == TRUE
+  INF  MmSupervisorPkg/Test/MmPagingAuditTest/UEFI/MmPagingAuditApp.inf
+!endif
+  # INF  UefiTestingPkg/AuditTests/PagingAudit/UEFI/DxePagingAuditDriver.inf
+!endif
+
+# PRM Configuration Driver
+INF PrmPkg/PrmConfigDxe/PrmConfigDxe.inf
+
+# PRM Sample Modules
+INF PrmPkg/Samples/PrmSampleAcpiParameterBufferModule/PrmSampleAcpiParameterBufferModule.inf
+#INF PrmPkg/Samples/PrmSampleHardwareAccessModule/PrmSampleHardwareAccessModule.inf
+INF PrmPkg/Samples/PrmSampleContextBufferModule/PrmSampleContextBufferModule.inf
+#INF AdvLoggerPkg/AdvLoggerOsConnectorPrm/AdvLoggerOsConnectorPrm.inf
+
+# PRM Module Loader Driver
+INF PrmPkg/PrmLoaderDxe/PrmLoaderDxe.inf
+
+# PRM SSDT Installation Driver
+INF PrmPkg/PrmSsdtInstallDxe/PrmSsdtInstallDxe.inf
+
+FILE FREEFORM = PCD(gDfciPkgTokenSpaceGuid.PcdDfciTimerFile) {
+    SECTION RAW = DfciPkg/Include/Resources/DfciWorking.bmp
+}
+FILE FREEFORM = PCD(gZeroTouchPkgTokenSpaceGuid.PcdZeroTouchCertificateFile) {
+    SECTION RAW = ZeroTouchPkg/Certs/ZeroTouch/ZtdRecovery.cer
+}
+
+  INF DfciPkg/IdentityAndAuthManager/IdentityAndAuthManagerDxe.inf
+  INF DfciPkg/SettingsManager/SettingsManagerDxe.inf
+  INF MsGraphicsPkg/MsUiTheme/Dxe/MsUiThemeProtocol.inf
+  INF MsGraphicsPkg/RenderingEngineDxe/RenderingEngineDxe.inf
+  INF MsGraphicsPkg/DisplayEngineDxe/DisplayEngineDxe.inf
+  INF OemPkg/BootMenu/BootMenu.inf
+  INF QemuPkg/FrontPageButtons/FrontPageButtons.inf
+  INF OemPkg/FrontPage/FrontPage.inf
+  INF PcBdsPkg/MsBootPolicy/MsBootPolicy.inf
+  INF MdeModulePkg/Universal/BootManagerPolicyDxe/BootManagerPolicyDxe.inf
+  INF DfciPkg/DfciManager/DfciManager.inf
+  INF MfciPkg/MfciDxe/MfciDxe.inf
+  INF MsGraphicsPkg/OnScreenKeyboardDxe/OnScreenKeyboardDxe.inf
+  INF MsGraphicsPkg/SimpleWindowManagerDxe/SimpleWindowManagerDxe.inf
+  INF AdvLoggerPkg/Application/AdvancedLogDumper/AdvancedLogDumper.inf
+!if $(SMM_ENABLED) == TRUE
+  INF MmSupervisorPkg/Drivers/MmSupervisorErrorReport/MmSupervisorErrorReport.inf
+!endif
+  FILE APPLICATION=PCD(gPcBdsPkgTokenSpaceGuid.PcdShellFile) {
+    SECTION PE32=$(OUTPUT_DIRECTORY)/$(TARGET)_$(TOOL_CHAIN_TAG)/X64/Shell.efi
+    SECTION UI= "EdkShell"
+  }
+  FILE FREEFORM = PCD(gOemPkgTokenSpaceGuid.PcdLogoFile) {
+    SECTION RAW = OemPkg/FrontPage/Resources/BootLogo.bmp
+    SECTION UI = "Logo"
+  }
+  FILE FREEFORM = PCD(gOemPkgTokenSpaceGuid.PcdFrontPageLogoFile) {
+    SECTION RAW = OemPkg/FrontPage/Resources/FrontpageLogo.bmp
+  }
+  FILE FREEFORM = PCD(gOemPkgTokenSpaceGuid.PcdLowBatteryFile) {
+    SECTION RAW = OemPkg/FrontPage/Resources/LBAT.bmp
+  }
+  FILE FREEFORM = PCD(gOemPkgTokenSpaceGuid.PcdThermalFile) {
+    SECTION RAW = OemPkg/FrontPage/Resources/THOT.bmp
+  }
+  FILE FREEFORM = PCD(gOemPkgTokenSpaceGuid.PcdVolumeUpIndicatorFile) {
+    SECTION RAW = OemPkg/FrontPage/Resources/VolumeUp.bmp
+  }
+  FILE FREEFORM = PCD(gOemPkgTokenSpaceGuid.PcdFirmwareSettingsIndicatorFile) {
+    SECTION RAW = OemPkg/FrontPage/Resources/FirmwareSettings.bmp
+  }
+  FILE FREEFORM = PCD(gOemPkgTokenSpaceGuid.PcdBootFailIndicatorFile ) {
+    SECTION RAW = OemPkg/FrontPage/Resources/NoBoot.bmp
+  }
+  FILE FREEFORM = gMmSupervisorPolicyFileGuid {
+    SECTION RAW = $(POLICY_BIN_PATH)
+  }
+
+!if $(BUILD_RUST_CODE) == TRUE
+  FILE DRIVER = A14E35E2-BB32-4446-8622-C1874B8284E4 {
+    SECTION GUIDED 3D532050-5CDA-4FD0-879E-0F7F630D5AFB PROCESSING_REQUIRED = TRUE {
+      SECTION DXE_DEPEX=$(OUTPUT_DIRECTORY)/$(TARGET)_$(TOOL_CHAIN_TAG)/X64/MsCorePkg/HelloWorldRustDxe/HelloWorldRustDxe/OUTPUT/HelloWorldRustDxe.depex
+      SECTION PE32=$(OUTPUT_DIRECTORY)/$(TARGET)_$(TOOL_CHAIN_TAG)/X64/HelloWorldRustDxe.efi
+      SECTION UI= "HelloWorldRustDxe"
+    }
+  }
+!endif
+
+################################################################################
+#
+# The RUST_DXE_CORE firmware volume contains the pre-compiled DXE Core Driver to
+# be used in the build process.  There is no requirement to keep it isolated,
+# but it is not part of the [FV.DXEFV] firmware volume in this build to support
+# Patina features such as post-build replacement of the DXE Core driver.
+#
+# By default, DXE_CORE_NUGET_FEED_PATH is defined in the DXECORE.QEMU_ext_dep.json
+# file and indicates the directory that the Stuart build placed the pre-compiled
+# drivers from the Nuget feed.
+#
+# To override the pre-compiled DXE Core driver with a user specific binary, the
+# DXE_CORE_BINARY_OVERRIDE variable can be set on the command line with the new
+# file path:
+#
+# stuart_build -c Platforms\QemuQ35Pkg\PlatformBuild.py BLD_*_DXE_CORE_BINARY_OVERRIDE=<path to file>
+#
+################################################################################
+[FV.RUST_DXE_CORE]
+FvForceRebase       = FALSE
+FvAlignment         = 16
+ERASE_POLARITY      = 1
+MEMORY_MAPPED       = TRUE
+STICKY_WRITE        = TRUE
+LOCK_CAP            = TRUE
+LOCK_STATUS         = TRUE
+WRITE_DISABLED_CAP  = TRUE
+WRITE_ENABLED_CAP   = TRUE
+WRITE_STATUS        = TRUE
+WRITE_LOCK_CAP      = TRUE
+WRITE_LOCK_STATUS   = TRUE
+READ_DISABLED_CAP   = TRUE
+READ_ENABLED_CAP    = TRUE
+READ_STATUS         = TRUE
+READ_LOCK_CAP       = TRUE
+READ_LOCK_STATUS    = TRUE
+
+FILE DXE_CORE = 23C9322F-2AF2-476A-BC4C-26BC88266C71 {
+!ifdef $(DXE_CORE_BINARY_OVERRIDE)
+  SECTION PE32 = $(DXE_CORE_BINARY_OVERRIDE)                                 # User defined override
+!else
+  !if $(TARGET) == RELEASE
+    SECTION PE32 = $(DXE_CORE_NUGET_FEED_PATH)/release/qemu_q35_dxe_core.efi # Nuget feed release build
+  !else
+    SECTION PE32 = $(DXE_CORE_NUGET_FEED_PATH)/debug/qemu_q35_dxe_core.efi   # Nuget feed debug build
+  !endif
+!endif
+  SECTION UI = "DxeCore"
+}
+
+################################################################################
+
+[FV.FVMAIN_COMPACT]
+FvNameGuid         = 48DB5E17-707C-472D-91CD-1613E7EF51B0
+FvAlignment        = 16
+ERASE_POLARITY     = 1
+MEMORY_MAPPED      = TRUE
+STICKY_WRITE       = TRUE
+LOCK_CAP           = TRUE
+LOCK_STATUS        = TRUE
+WRITE_DISABLED_CAP = TRUE
+WRITE_ENABLED_CAP  = TRUE
+WRITE_STATUS       = TRUE
+WRITE_LOCK_CAP     = TRUE
+WRITE_LOCK_STATUS  = TRUE
+READ_DISABLED_CAP  = TRUE
+READ_ENABLED_CAP   = TRUE
+READ_STATUS        = TRUE
+READ_LOCK_CAP      = TRUE
+READ_LOCK_STATUS   = TRUE
+
+FILE FV_IMAGE = 9E21FD93-9C72-4c15-8C4B-E77F1DB2D792 {
+  SECTION GUIDED EE4E5898-3914-4259-9D6E-DC7BD79403CF PROCESSING_REQUIRED = TRUE {
+    #
+    # These firmware volumes will have files placed in them uncompressed,
+    # and then both firmware volumes will be compressed in a single
+    # compression operation in order to achieve better overall compression.
+    #
+    SECTION FV_IMAGE = PEIFV
+    SECTION FV_IMAGE = DXEFV
+  }
+}
+
+# Use externally built Rust DXE core binary.
+# Keep in a separate FV with the compressed DXE Core to make the FV easy to patch.
+FILE FV_IMAGE = FB5947AF-7CB5-413E-8C1A-38167FCBE3EA {
+  SECTION GUIDED EE4E5898-3914-4259-9D6E-DC7BD79403CF PROCESSING_REQUIRED = TRUE {
+    SECTION FV_IMAGE = RUST_DXE_CORE
+  }
+}
+
+!include FvmainCompactScratchEnd.inc.fdf
+
+################################################################################
+
+[Rule.Common.SEC]
+  FILE SEC = $(NAMED_GUID) {
+    PE32     PE32           $(INF_OUTPUT)/$(MODULE_NAME).efi
+    UI       STRING ="$(MODULE_NAME)" Optional
+    VERSION  STRING ="$(INF_VERSION)" Optional BUILD_NUM=$(BUILD_NUMBER)
+  }
+
+[Rule.Common.PEI_CORE]
+  FILE PEI_CORE = $(NAMED_GUID) {
+    PE32     PE32   Align=Auto    $(INF_OUTPUT)/$(MODULE_NAME).efi
+    UI       STRING ="$(MODULE_NAME)" Optional
+    VERSION  STRING ="$(INF_VERSION)" Optional BUILD_NUM=$(BUILD_NUMBER)
+  }
+
+[Rule.Common.PEIM]
+  FILE PEIM = $(NAMED_GUID) {
+     PEI_DEPEX PEI_DEPEX Optional        $(INF_OUTPUT)/$(MODULE_NAME).depex
+     PE32      PE32   Align=Auto         $(INF_OUTPUT)/$(MODULE_NAME).efi
+     UI       STRING="$(MODULE_NAME)" Optional
+     VERSION  STRING="$(INF_VERSION)" Optional BUILD_NUM=$(BUILD_NUMBER)
+  }
+
+[Rule.Common.PEIM.BINARY]
+  FILE PEIM = $(NAMED_GUID) {
+    PEI_DEPEX PEI_DEPEX Optional      |.depex
+    PE32      PE32     Align = Auto   |.efi
+    UI        STRING="$(MODULE_NAME)" Optional
+    VERSION   STRING="$(INF_VERSION)" Optional BUILD_NUM=$(BUILD_NUMBER)
+  }
+
+[Rule.Common.DXE_CORE]
+  FILE DXE_CORE = $(NAMED_GUID) {
+    PE32     PE32           $(INF_OUTPUT)/$(MODULE_NAME).efi
+    UI       STRING="$(MODULE_NAME)" Optional
+    VERSION  STRING="$(INF_VERSION)" Optional BUILD_NUM=$(BUILD_NUMBER)
+  }
+
+[Rule.Common.DXE_DRIVER]
+  FILE DRIVER = $(NAMED_GUID) {
+    DXE_DEPEX    DXE_DEPEX Optional      $(INF_OUTPUT)/$(MODULE_NAME).depex
+    PE32     PE32                    $(INF_OUTPUT)/$(MODULE_NAME).efi
+    UI       STRING="$(MODULE_NAME)" Optional
+    VERSION  STRING="$(INF_VERSION)" Optional BUILD_NUM=$(BUILD_NUMBER)
+    RAW ACPI  Optional               |.acpi
+    RAW ASL   Optional               |.aml
+  }
+
+[Rule.Common.DXE_DRIVER.BINARY]
+  FILE DRIVER = $(NAMED_GUID) {
+    DXE_DEPEX DXE_DEPEX Optional      |.depex
+    PE32      PE32                    |.efi
+    UI        STRING="$(MODULE_NAME)" Optional
+    VERSION   STRING="$(INF_VERSION)" Optional BUILD_NUM=$(BUILD_NUMBER)
+  }
+
+[Rule.Common.DXE_RUNTIME_DRIVER]
+  FILE DRIVER = $(NAMED_GUID) {
+    DXE_DEPEX    DXE_DEPEX Optional      $(INF_OUTPUT)/$(MODULE_NAME).depex
+    PE32     PE32                    $(INF_OUTPUT)/$(MODULE_NAME).efi
+    UI       STRING="$(MODULE_NAME)" Optional
+    VERSION  STRING="$(INF_VERSION)" Optional BUILD_NUM=$(BUILD_NUMBER)
+  }
+
+[Rule.Common.DXE_RUNTIME_DRIVER.BINARY]
+  FILE DRIVER = $(NAMED_GUID) {
+    DXE_DEPEX DXE_DEPEX Optional      |.depex
+    PE32      PE32                    |.efi
+    UI        STRING="$(MODULE_NAME)" Optional
+    VERSION   STRING="$(INF_VERSION)" Optional BUILD_NUM=$(BUILD_NUMBER)
+  }
+
+[Rule.Common.UEFI_DRIVER]
+  FILE DRIVER = $(NAMED_GUID) {
+    DXE_DEPEX    DXE_DEPEX Optional      $(INF_OUTPUT)/$(MODULE_NAME).depex
+    PE32     PE32                    $(INF_OUTPUT)/$(MODULE_NAME).efi
+    UI       STRING="$(MODULE_NAME)" Optional
+    VERSION  STRING="$(INF_VERSION)" Optional BUILD_NUM=$(BUILD_NUMBER)
+  }
+
+[Rule.Common.UEFI_DRIVER.BINARY]
+  FILE DRIVER = $(NAMED_GUID) {
+    DXE_DEPEX DXE_DEPEX Optional      |.depex
+    PE32      PE32                    |.efi
+    UI        STRING="$(MODULE_NAME)" Optional
+    VERSION   STRING="$(INF_VERSION)" Optional BUILD_NUM=$(BUILD_NUMBER)
+  }
+
+[Rule.Common.MM_CORE_STANDALONE]
+  FILE MM_CORE_STANDALONE = $(NAMED_GUID) {
+    PE32     PE32           $(INF_OUTPUT)/$(MODULE_NAME).efi
+    UI       STRING="$(MODULE_NAME)" Optional
+    VERSION  STRING="$(INF_VERSION)" Optional BUILD_NUM=$(BUILD_NUMBER)
+  }
+
+[Rule.Common.MM_STANDALONE]
+  FILE MM_STANDALONE = $(NAMED_GUID) {
+    SMM_DEPEX    SMM_DEPEX Optional      $(INF_OUTPUT)/$(MODULE_NAME).depex
+    PE32     PE32                    $(INF_OUTPUT)/$(MODULE_NAME).efi
+    UI       STRING="$(MODULE_NAME)" Optional
+    VERSION  STRING="$(INF_VERSION)" Optional BUILD_NUM=$(BUILD_NUMBER)
+  }
+
+[Rule.Common.MM_STANDALONE.BINARY]
+  FILE MM_STANDALONE = $(NAMED_GUID) {
+    SMM_DEPEX SMM_DEPEX Optional      |.depex
+    PE32      PE32                    |.efi
+    UI        STRING="$(MODULE_NAME)" Optional
+    VERSION   STRING="$(INF_VERSION)" Optional BUILD_NUM=$(BUILD_NUMBER)
+  }
+
+[Rule.Common.UEFI_APPLICATION]
+  FILE APPLICATION = $(NAMED_GUID) {
+    COMPRESS PI_STD {
+      GUIDED {
+        PE32     PE32                    $(INF_OUTPUT)/$(MODULE_NAME).efi
+        UI       STRING="$(MODULE_NAME)" Optional
+        VERSION  STRING="$(INF_VERSION)" Optional BUILD_NUM=$(BUILD_NUMBER)
+      }
+    }
+  }
+
+[Rule.Common.UEFI_APPLICATION.BINARY]
+  FILE APPLICATION = $(NAMED_GUID) {
+    PE32      PE32                    |.efi
+    UI        STRING="$(MODULE_NAME)" Optional
+    VERSION   STRING="$(INF_VERSION)" Optional BUILD_NUM=$(BUILD_NUMBER)
+  }
+
+[Rule.Common.USER_DEFINED.ACPITABLE]
+  FILE FREEFORM = $(NAMED_GUID) {
+    RAW ACPI               |.acpi
+    RAW ASL                |.aml
+  }
+
+[Rule.Common.USER_DEFINED.RESET_VECTOR]
+  FILE RAW = $(NAMED_GUID) {
+    RAW BIN   Align = 16   |.bin
+  }
+
+[Rule.Common.SMM_CORE]
+  FILE SMM_CORE = $(NAMED_GUID) {
+    PE32     PE32           $(INF_OUTPUT)/$(MODULE_NAME).efi
+    UI       STRING="$(MODULE_NAME)" Optional
+    VERSION  STRING="$(INF_VERSION)" Optional BUILD_NUM=$(BUILD_NUMBER)
+  }
+
+[Rule.Common.DXE_SMM_DRIVER]
+  FILE SMM = $(NAMED_GUID) {
+    SMM_DEPEX    SMM_DEPEX Optional      $(INF_OUTPUT)/$(MODULE_NAME).depex
+    PE32     PE32                    $(INF_OUTPUT)/$(MODULE_NAME).efi
+    UI       STRING="$(MODULE_NAME)" Optional
+    VERSION  STRING="$(INF_VERSION)" Optional BUILD_NUM=$(BUILD_NUMBER)
+  }
+
+[Rule.Common.DXE_SMM_DRIVER.DRIVER_ACPITABLE]
+  FILE SMM = $(NAMED_GUID) {
+    DXE_DEPEX DXE_DEPEX Optional       $(INF_OUTPUT)/$(MODULE_NAME).depex
+    PE32      PE32                     $(INF_OUTPUT)/$(MODULE_NAME).efi
+    RAW ACPI  Optional                |.acpi
+    RAW ASL   Optional                |.aml
+    UI        STRING="$(MODULE_NAME)" Optional
+    VERSION   STRING="$(INF_VERSION)" Optional BUILD_NUM=$(BUILD_NUMBER)
+  }
+
+[Rule.Common.DXE_SMM_DRIVER.BINARY]
+  FILE SMM = $(NAMED_GUID) {
+    SMM_DEPEX SMM_DEPEX Optional      |.depex
+    PE32      PE32                    |.efi
+    UI        STRING="$(MODULE_NAME)" Optional
+    VERSION   STRING="$(INF_VERSION)" Optional BUILD_NUM=$(BUILD_NUMBER)
+  }

@@ -1,0 +1,24 @@
+__pycache__/
+.DS_Store
+.vscode/**
+!.vscode/settings.json
+*_extdep/
+*.bak
+*.pyc
+**/*.rs.bk
+/Build/
+/Conf/
+/target
+BuildConfig.conf
+tags/
+Cargo.lock
+UefiDbgExt/x64/
+/**/Include/Generated/**
+/**/AutoGen/**
+*secure.log
+*secure_mm.log
+
+# Ignore Rust build output
+/target
+*venv*
+PatinaPatching/Configs/
