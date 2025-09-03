@@ -1042,9 +1042,24 @@ QemuQ35Pkg/Library/ResetSystemLib/StandaloneMmResetSystemLib.inf
   DebuggerFeaturePkg/DebugConfigPei/DebugConfigPei.inf
 
 [Components.X64]
-  #########################################
-  # DXE Phase modules
-  #########################################
+
+
+
+
+  ##################################################################################
+  # Patina / Tianocore Development
+  # Primary focus drivers for this repository
+  ##################################################################################
+
+  Platform/PATINA_TIANOCORE_DEV/HelloWorldRustDxe.inf
+
+
+
+
+
+
+
+
   # Reads smbios type 3 to determine volume button state.
   QemuPkg/FrontPageButtons/FrontPageButtons.inf
 
