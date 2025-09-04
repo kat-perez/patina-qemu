@@ -1049,9 +1049,10 @@ QemuQ35Pkg/Library/ResetSystemLib/StandaloneMmResetSystemLib.inf
   ##################################################################################
   # Patina / Tianocore Development
   # Primary focus drivers for this repository
+  # Folder is located in the /Platforms directory
   ##################################################################################
 
-  Platform/PATINA_TIANOCORE_DEV/HelloWorldRustDxe.inf
+  Platforms/PATINA_TIANOCORE_DEV/HelloWorldRustDxe/HelloWorldRustDxe.inf
 
 
 

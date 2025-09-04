@@ -307,9 +307,10 @@ READ_LOCK_STATUS   = TRUE
 ##################################################################################
 # Patina / Tianocore Development
 # Primary focus drivers for this repository
+# Folder is located in the /Platforms directory
 ##################################################################################
 
-INF Platforms/PATINA_TIANOCORE_DEV/HelloWorldRustDxe.inf
+INF Platforms/PATINA_TIANOCORE_DEV/HelloWorldRustDxe/HelloWorldRustDxe.inf
 
 
 
