@@ -1,0 +1,14 @@
+[package]
+name = "PatinaSmbiosDxe"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "PatinaSmbiosDxe"
+path = "src/main.rs"
+
+[dependencies]
+r-efi = {workspace=true}
+RustAdvancedLoggerDxe = {workspace=true}
+RustBootServicesAllocatorDxe = {workspace=true}
+patina_smbios = {workspace=true}

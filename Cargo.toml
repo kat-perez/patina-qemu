@@ -6,7 +6,8 @@ members = [
     "Platforms/QemuQ35Pkg/RustDriverDxe",
     "Platforms/QemuQ35Pkg/RustImageTestDxe",
     "Common/MU/HidPkg/UefiHidDxe",
-    "Common/MU/MsCorePkg/HelloWorldRustDxe",
+    "Platforms/PATINA_TIANOCORE_DEV/HelloWorldRustDxe",
+    "Platforms/PATINA_TIANOCORE_DEV/PatinaSmbiosDxe",
 ]
 
 # Add packages that generate libraries here
@@ -16,6 +17,7 @@ HiiKeyboardLayout = {path = "Common/MU/HidPkg/Crates/HiiKeyboardLayout"}
 RustAdvancedLoggerDxe = {path = "Common/MU/AdvLoggerPkg/Crates/RustAdvancedLoggerDxe"}
 RustBootServicesAllocatorDxe = {path = "Common/MU/MsCorePkg/Crates/RustBootServicesAllocatorDxe"}
 SerialPrintDxe = {path = "QemuPkg/Library/SerialPrintDxe"}
+patina_smbios = {path = "Platforms/PATINA_TIANOCORE_DEV/patina-smbios"}
 
 mu_uefi_boot_services = "2.0.0"
 hidparser = {version = "1.0"}

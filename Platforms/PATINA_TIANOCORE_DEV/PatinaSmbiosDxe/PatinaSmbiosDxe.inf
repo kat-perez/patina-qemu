@@ -1,0 +1,20 @@
+### @file
+# SMBIOS DXE Driver
+#
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# SPDX-License-Identifier: MIT License
+#
+###
+
+[Defines]
+  INF_VERSION     = 1.27
+  BASE_NAME       = PatinaSmbiosDxe
+  FILE_GUID       = 68BD4911-85DE-40EE-9327-AA8D727E613F
+  MODULE_TYPE     = DXE_DRIVER
+  RUST_MODULE     = TRUE
+
+[Sources]
+  Cargo.toml
+
+[Depex]
+  TRUE
