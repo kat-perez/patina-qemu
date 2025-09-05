@@ -1052,7 +1052,7 @@ QemuQ35Pkg/Library/ResetSystemLib/StandaloneMmResetSystemLib.inf
   # Folder is located in the /Platforms directory
   ##################################################################################
 
-  Platforms/PATINA_TIANOCORE_DEV/HelloWorldRustDxe/HelloWorldRustDxe.inf
+  PATINA_TIANOCORE_DEV/PatinaSmbiosDxe/PatinaSmbiosDxe.inf
 
 
 

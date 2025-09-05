@@ -310,9 +310,7 @@ READ_LOCK_STATUS   = TRUE
 # Folder is located in the /Platforms directory
 ##################################################################################
 
-INF Platforms/PATINA_TIANOCORE_DEV/HelloWorldRustDxe/HelloWorldRustDxe.inf
-
-
+INF PATINA_TIANOCORE_DEV/PatinaSmbiosDxe/PatinaSmbiosDxe.inf
 
 
 
