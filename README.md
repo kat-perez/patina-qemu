@@ -30,7 +30,7 @@ This repo contains code to create a sample Patina DXE Core EFI driver that uses 
 This is the normal QEMU build tree to test the Patina DXE Core.  The [Advanced Usage](https://github.com/OpenDevicePartnership/patina-qemu?tab=readme-ov-file#advanced-usage) section of the Readme.md file outlines the steps to add the qemu_q35_dxe_core.efi file for testing.
 
 
-## Repo 3: Private QEMU UEFI build for testing the Patina SMBIOS module as a Tianocore driver
+## Repo 4: Private QEMU UEFI build for testing the Patina SMBIOS module as a Tianocore driver
 
 [PRIVATE patina-tianocore-dev - Branch: main](https://github.com/rogurr/patina-tianocore-dev)
 
