@@ -14,7 +14,9 @@
 // UEFI requires "no_main" and a panic handler. To facilitate unit tests, gate "no_main", UEFI entry point, and panic
 // handler behind target_os configuration.
 #![cfg_attr(target_os = "uefi", no_main)]
-#[cfg(target_os = "uefi")]
+
+// REMOVED DUE TO EDITOR BEHAVIOR  -  #[cfg(target_os = "uefi")]
+
 
 mod uefi_entry {
     extern crate alloc;
@@ -33,41 +35,48 @@ mod uefi_entry {
         _image_handle: *const core::ffi::c_void,
         system_table: *const r_efi::system::SystemTable,
     ) -> u64 {
-        //
-        // Normal driver setup to allow a debugger
-        //
 
-        rust_boot_services_allocator_dxe::GLOBAL_ALLOCATOR.init(unsafe { (*system_table).boot_services });
+        // Setup a global allocator that uses the boot services memory functions for any normal crate
+        // used outside the component we are supporting
+        rust_boot_services_allocator_dxe::GLOBAL_ALLOCATOR.init(
+            unsafe {
+                (*system_table).boot_services 
+            }
+        );
+
+        // Setup logging for this driver.  The advanced logger is currently being used so that we can
+        // use the debug flags such as `DEBUG_INFO`, but any logging crate that supports no_std can be used.
         init_debug(unsafe { (*system_table).boot_services });
         debugln!(DEBUG_INFO, "PatinaSmbiosDxe Entry");
 
-        //
-        // SMBIOS Module Usage
-        //
-
-        // Step 1: Create Patina component storage
+        // Create a Patina component storage area
         let mut storage = Storage::new();
 
-        // Step 2: Set up boot services in storage
-        let system_table_ref = unsafe { &*system_table };
-        let boot_services_ref = unsafe { &*system_table_ref.boot_services };
-        let boot_services = StandardBootServices::new(boot_services_ref);
-        storage.set_boot_services(boot_services.clone());
+        // Provide boot services access to the storage area
+        storage.set_boot_services(
+            StandardBootServices::new(
+                unsafe { system_table.as_ref().unwrap().boot_services.as_ref().unwrap() }
+            )
+        );
 
-        // Step 3: Configure SMBIOS (default is version 3.9, defining here as example)
-        let config = SmbiosConfiguration { major_version: 3, minor_version: 9 };
-        storage.add_config(config);
+        // Add the SMBIOS config to the storage area.
+        // Default is version 3.9, so this is not necessary and only present for demonstration purposes.
+        storage.add_config(
+            SmbiosConfiguration { major_version: 3, minor_version: 9 }
+        );
 
-        // Step 4: Create the SMBIOS provider
-        let smbios_provider = SmbiosProviderManager::new();
+        // Create the SMBIOS component
+        let mut smbios_component = SmbiosProviderManager::new().into_component();
 
-        // Step 5: Create and initialize the SMBIOS component
-        let mut smbios_component = smbios_provider.into_component();
+        // Initialize the new component using the storage that has boot services and it's config
         smbios_component.initialize(&mut storage);
 
-        // Step 6: Run the component and convert it's return to an EFI_STATUS code
+        // Run the component and convert it's return to an EFI_STATUS code
         match smbios_component.run(&mut storage) {
             Ok(_) => {
+                // In the log, the line prior to this should state:
+                // INFO - InstallProtocolInterface: 03583FF6-CB36-4940-947E-B9B39F4AFAF7
+                // This is from the Tiano DXE core indicating the SMBIOS protocol was installed
                 debugln!(DEBUG_INFO, "SMBIOS component run completed successfully");
                 Status::SUCCESS.as_usize() as u64
             }
