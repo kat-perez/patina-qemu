@@ -1042,25 +1042,6 @@ QemuQ35Pkg/Library/ResetSystemLib/StandaloneMmResetSystemLib.inf
   DebuggerFeaturePkg/DebugConfigPei/DebugConfigPei.inf
 
 [Components.X64]
-
-
-
-
-  ##################################################################################
-  # Patina / Tianocore Development
-  # Primary focus drivers for this repository
-  # Folder is located in the /Platforms directory
-  ##################################################################################
-
-  PATINA_TIANOCORE_DEV/PatinaSmbiosDxe/PatinaSmbiosDxe.inf
-
-
-
-
-
-
-
-
   # Reads smbios type 3 to determine volume button state.
   QemuPkg/FrontPageButtons/FrontPageButtons.inf
 
@@ -1252,11 +1233,22 @@ QemuQ35Pkg/Library/ResetSystemLib/StandaloneMmResetSystemLib.inf
   #
   # SMBIOS Support
   #
-  MdeModulePkg/Universal/SmbiosDxe/SmbiosDxe.inf {
-    <LibraryClasses>
-      NULL|QemuQ35Pkg/Library/SmbiosVersionLib/DetectSmbiosVersionLib.inf
-  }
+
+
+  ##################################################################################
+  # Patina / Tianocore Development
+  # Replacing the Tianocore SmbiosDxe driver with the Pataina version
+  ##################################################################################
+  PATINA_TIANOCORE_DEV/PatinaSmbiosDxe/PatinaSmbiosDxe.inf
+  ## MdeModulePkg/Universal/SmbiosDxe/SmbiosDxe.inf {
+  ##   <LibraryClasses>
+  ##     NULL|QemuQ35Pkg/Library/SmbiosVersionLib/DetectSmbiosVersionLib.inf
+  ## }
+  ##################################################################################
   QemuQ35Pkg/SmbiosPlatformDxe/SmbiosPlatformDxe.inf
+
+
+
 
   #
   # ACPI Support

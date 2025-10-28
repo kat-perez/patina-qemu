@@ -17,7 +17,6 @@ HiiKeyboardLayout = {path = "Common/MU/HidPkg/Crates/HiiKeyboardLayout"}
 RustAdvancedLoggerDxe = {path = "Common/MU/AdvLoggerPkg/Crates/RustAdvancedLoggerDxe"}
 RustBootServicesAllocatorDxe = {path = "Common/MU/MsCorePkg/Crates/RustBootServicesAllocatorDxe"}
 SerialPrintDxe = {path = "QemuPkg/Library/SerialPrintDxe"}
-patina_smbios = {git = "https://github.com/OpenDevicePartnership/patina-smbios.git", branch = "main"}
 
 mu_uefi_boot_services = "2.0.0"
 hidparser = {version = "1.0"}
@@ -30,7 +29,7 @@ scroll = { version = "0.11", default-features = false, features = ["derive"]}
 rustversion = "1.0.21"
 spin = "0.9.8"
 uart_16550 = "0.3.0"
-x86_64 = "=0.15.1"
+x86_64 = "=0.15.2"
 
 # By default, the dev profile is used. The default build settings for the dev profile are documented here:
 # https://doc.rust-lang.org/cargo/reference/profiles.html#dev
