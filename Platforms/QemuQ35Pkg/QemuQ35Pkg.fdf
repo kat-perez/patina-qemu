@@ -324,7 +324,7 @@ INF  MdeModulePkg/Universal/SecurityStubDxe/SecurityStubDxe.inf
 
 INF  QemuQ35Pkg/8259InterruptControllerDxe/8259.inf
 INF  UefiCpuPkg/CpuIo2Dxe/CpuIo2Dxe.inf
-# INF  UefiCpuPkg/CpuDxe/CpuDxe.inf
+INF  UefiCpuPkg/CpuDxe/CpuDxe.inf
 INF  UefiCpuPkg/MpDxe/MpDxe.inf
 INF  QemuQ35Pkg/8254TimerDxe/8254Timer.inf
 INF  QemuQ35Pkg/IncompatiblePciDeviceSupportDxe/IncompatiblePciDeviceSupport.inf
@@ -380,8 +380,18 @@ INF  MdeModulePkg/Universal/MemoryTest/NullMemoryTestDxe/NullMemoryTestDxe.inf
 INF  QemuQ35Pkg/SioBusDxe/SioBusDxe.inf
 INF  MdeModulePkg/Bus/Isa/Ps2KeyboardDxe/Ps2KeyboardDxe.inf
 
-INF  MdeModulePkg/Universal/SmbiosDxe/SmbiosDxe.inf
+
+
+##################################################################################
+# Patina / Tianocore Development
+# Replacing the Tianocore SmbiosDxe driver with the Pataina version
+##################################################################################
+INF PATINA_TIANOCORE_DEV/PatinaSmbiosDxe/PatinaSmbiosDxe.inf
+## INF  MdeModulePkg/Universal/SmbiosDxe/SmbiosDxe.inf
+##################################################################################
 INF  QemuQ35Pkg/SmbiosPlatformDxe/SmbiosPlatformDxe.inf
+
+
 
 INF  MdeModulePkg/Universal/Acpi/AcpiTableDxe/AcpiTableDxe.inf
 INF  QemuQ35Pkg/AcpiPlatformDxe/AcpiPlatformDxe.inf
@@ -656,18 +666,19 @@ READ_STATUS         = TRUE
 READ_LOCK_CAP       = TRUE
 READ_LOCK_STATUS    = TRUE
 
-FILE DXE_CORE = 23C9322F-2AF2-476A-BC4C-26BC88266C71 {
-!ifdef $(DXE_CORE_BINARY_OVERRIDE)
-  SECTION PE32 = $(DXE_CORE_BINARY_OVERRIDE)                                 # User defined override
-!else
-  !if $(TARGET) == RELEASE
-    SECTION PE32 = $(DXE_CORE_NUGET_FEED_PATH)/release/qemu_q35_dxe_core.efi # Nuget feed release build
-  !else
-    SECTION PE32 = $(DXE_CORE_NUGET_FEED_PATH)/debug/qemu_q35_dxe_core.efi   # Nuget feed debug build
-  !endif
-!endif
-  SECTION UI = "DxeCore"
-}
+INF  MdeModulePkg/Core/Dxe/DxeMain.inf
+###   FILE DXE_CORE = 23C9322F-2AF2-476A-BC4C-26BC88266C71 {
+###   !ifdef $(DXE_CORE_BINARY_OVERRIDE)
+###     SECTION PE32 = $(DXE_CORE_BINARY_OVERRIDE)                                 # User defined override
+###   !else
+###     !if $(TARGET) == RELEASE
+###       SECTION PE32 = $(DXE_CORE_NUGET_FEED_PATH)/release/qemu_q35_dxe_core.efi # Nuget feed release build
+###     !else
+###       SECTION PE32 = $(DXE_CORE_NUGET_FEED_PATH)/debug/qemu_q35_dxe_core.efi   # Nuget feed debug build
+###     !endif
+###   !endif
+###     SECTION UI = "DxeCore"
+###   }
 
 ################################################################################
 

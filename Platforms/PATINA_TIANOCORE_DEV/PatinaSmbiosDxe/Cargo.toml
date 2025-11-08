@@ -1,0 +1,18 @@
+[package]
+name = "PatinaSmbiosDxe"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "PatinaSmbiosDxe"
+path = "src/main.rs"
+
+[dependencies]
+r-efi = {workspace=true}
+RustAdvancedLoggerDxe = {workspace=true}
+RustBootServicesAllocatorDxe = {workspace=true}
+
+# Using Git repo for demo purposes only
+# Normal usage would be to pull the crate from crates.io once published
+patina = { git = "https://github.com/OpenDevicePartnership/patina.git", rev = "6acc753b"}
+patina_smbios = { git = "https://github.com/OpenDevicePartnership/patina.git", rev = "6acc753b"}

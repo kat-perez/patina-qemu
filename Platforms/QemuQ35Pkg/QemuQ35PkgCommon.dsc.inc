@@ -1116,11 +1116,35 @@ QemuQ35Pkg/Library/ResetSystemLib/StandaloneMmResetSystemLib.inf
   #
   # SMBIOS Support
   #
-  MdeModulePkg/Universal/SmbiosDxe/SmbiosDxe.inf {
+
+
+
+##################################################################################
+# Patina / Tianocore Development
+# Replacing the Tianocore SmbiosDxe driver with the Pataina version, placing
+# the platform lib on the platform driver to detect the SMBIOS version, and 
+# using the standard Tianocore DxeMain driver
+##################################################################################
+  MdeModulePkg/Core/Dxe/DxeMain.inf {
+    <LibraryClasses>
+      NULL|MdeModulePkg/Library/LzmaCustomDecompressLib/LzmaCustomDecompressLib.inf
+      DevicePathLib|MdePkg/Library/UefiDevicePathLib/UefiDevicePathLib.inf
+  }
+
+  PATINA_TIANOCORE_DEV/PatinaSmbiosDxe/PatinaSmbiosDxe.inf
+  ## MdeModulePkg/Universal/SmbiosDxe/SmbiosDxe.inf {
+  ##   <LibraryClasses>
+  ##     NULL|QemuQ35Pkg/Library/SmbiosVersionLib/DetectSmbiosVersionLib.inf
+  ## }
+  QemuQ35Pkg/SmbiosPlatformDxe/SmbiosPlatformDxe.inf {
     <LibraryClasses>
       NULL|QemuQ35Pkg/Library/SmbiosVersionLib/DetectSmbiosVersionLib.inf
   }
-  QemuQ35Pkg/SmbiosPlatformDxe/SmbiosPlatformDxe.inf
+  ## QemuQ35Pkg/SmbiosPlatformDxe/SmbiosPlatformDxe.inf
+  ##################################################################################
+
+
+
 
   #
   # ACPI Support
