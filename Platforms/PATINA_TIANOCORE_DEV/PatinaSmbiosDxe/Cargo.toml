@@ -11,8 +11,5 @@ path = "src/main.rs"
 r-efi = {workspace=true}
 RustAdvancedLoggerDxe = {workspace=true}
 RustBootServicesAllocatorDxe = {workspace=true}
-
-# Using Git repo for demo purposes only
-# Normal usage would be to pull the crate from crates.io once published
-patina = { git = "https://github.com/OpenDevicePartnership/patina.git", rev = "6acc753b"}
-patina_smbios = { git = "https://github.com/OpenDevicePartnership/patina.git", rev = "6acc753b"}
+patina = "14.3.2"
+patina_smbios = "14.3.2"
