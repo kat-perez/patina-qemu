@@ -26,7 +26,7 @@ mod uefi_entry {
         boot_services::StandardBootServices,
         component::{IntoComponent, Storage},
     };
-    use patina_smbios::component::{SmbiosConfiguration, SmbiosProviderManager};
+    use patina_smbios::component::SmbiosProvider;
     use r_efi::efi::Status;
     use rust_advanced_logger_dxe::{debugln, init_debug, DEBUG_ERROR, DEBUG_INFO};
 
@@ -46,7 +46,9 @@ mod uefi_entry {
 
         // Setup logging for this driver.  The advanced logger is currently being used so that we can
         // use the debug flags such as `DEBUG_INFO`, but any logging crate that supports no_std can be used.
-        init_debug(unsafe { (*system_table).boot_services });
+        unsafe {
+            init_debug( (*system_table).boot_services );
+        }
         debugln!(DEBUG_INFO, "PatinaSmbiosDxe Entry");
 
         // Create a Patina component storage area
@@ -59,14 +61,8 @@ mod uefi_entry {
             )
         );
 
-        // Add the SMBIOS config to the storage area.
-        // Default is version 3.9, so this is not necessary and only present for demonstration purposes.
-        storage.add_config(
-            SmbiosConfiguration { major_version: 3, minor_version: 9 }
-        );
-
-        // Create the SMBIOS component
-        let mut smbios_component = SmbiosProviderManager::new().into_component();
+        // Create the SMBIOS component using SMBIOS version 3.9
+        let mut smbios_component = SmbiosProvider::new(3, 9).into_component();
 
         // Initialize the new component using the storage that has boot services and it's config
         smbios_component.initialize(&mut storage);
@@ -78,6 +74,7 @@ mod uefi_entry {
                 // INFO - InstallProtocolInterface: 03583FF6-CB36-4940-947E-B9B39F4AFAF7
                 // This is from the Tiano DXE core indicating the SMBIOS protocol was installed
                 debugln!(DEBUG_INFO, "SMBIOS component run completed successfully");
+                bug_work_around();
                 Status::SUCCESS.as_usize() as u64
             }
             Err(e) => {
@@ -91,6 +88,13 @@ mod uefi_entry {
     fn panic(_info: &PanicInfo) -> ! {
         loop {}
     }
+
+    // Work around the issue where the SMBIOS core component is not acting the same as the Tiano MdeModule SMBIOS driver
+    // and needs a driver to add an end table entry.
+    fn bug_work_around() {
+        
+    }
+
 }
 
 // For non-UEFI targets (e.g. compiling for unit test or clippy), supply a "main" function.

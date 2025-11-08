@@ -6,7 +6,7 @@ members = [
     "Platforms/QemuQ35Pkg/RustDriverDxe",
     "Platforms/QemuQ35Pkg/RustImageTestDxe",
     "Common/MU/HidPkg/UefiHidDxe",
-    "Platforms/PATINA_TIANOCORE_DEV/HelloWorldRustDxe",
+    "Common/MU/MsCorePkg/HelloWorldRustDxe",
     "Platforms/PATINA_TIANOCORE_DEV/PatinaSmbiosDxe",
 ]
 
