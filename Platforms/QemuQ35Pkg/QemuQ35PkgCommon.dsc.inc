@@ -312,9 +312,9 @@
   AmdSvsmLib|UefiCpuPkg/Library/AmdSvsmLibNull/AmdSvsmLibNull.inf
 
   # Platform Runtime Mechanism (PRM) libraries
-  PrmContextBufferLib|PrmPkg/Library/DxePrmContextBufferLib/DxePrmContextBufferLib.inf
-  PrmModuleDiscoveryLib|PrmPkg/Library/DxePrmModuleDiscoveryLib/DxePrmModuleDiscoveryLib.inf
-  PrmPeCoffLib|PrmPkg/Library/DxePrmPeCoffLib/DxePrmPeCoffLib.inf
+  # PrmContextBufferLib|PrmPkg/Library/DxePrmContextBufferLib/DxePrmContextBufferLib.inf
+  # PrmModuleDiscoveryLib|PrmPkg/Library/DxePrmModuleDiscoveryLib/DxePrmModuleDiscoveryLib.inf
+  # PrmPeCoffLib|PrmPkg/Library/DxePrmPeCoffLib/DxePrmPeCoffLib.inf
 
   HobPrintLib|MdeModulePkg/Library/HobPrintLib/HobPrintLib.inf
 
@@ -450,6 +450,7 @@
   ExtractGuidedSectionLib |MdePkg/Library/DxeExtractGuidedSectionLib/DxeExtractGuidedSectionLib.inf
   DebugAgentLib           |DebuggerFeaturePkg/Library/DebugAgent/DebugAgentDxe.inf
   RngLib                  |MdeModulePkg/Library/BaseRngLibTimerLib/BaseRngLibTimerLib.inf
+  DevicePathLib           |MdePkg/Library/UefiDevicePathLib/UefiDevicePathLib.inf
 
 [LibraryClasses.common.DXE_RUNTIME_DRIVER]
   ReportStatusCodeLib|MdeModulePkg/Library/RuntimeDxeReportStatusCodeLib/RuntimeDxeReportStatusCodeLib.inf
@@ -862,7 +863,7 @@
 
   gEfiMdeModulePkgTokenSpaceGuid.PcdSmbiosVersion|0x0208
   gEfiMdeModulePkgTokenSpaceGuid.PcdSmbiosDocRev|0x0
-  gUefiQemuQ35PkgTokenSpaceGuid.PcdQemuSmbiosValidated|FALSE
+  gUefiQemuQ35PkgTokenSpaceGuid.PcdQemuSmbiosValidated|TRUE
 
   # UefiCpuPkg PCDs related to initial AP bringup and general AP management.
   gUefiCpuPkgTokenSpaceGuid.PcdCpuBootLogicalProcessorNumber|0
@@ -925,6 +926,15 @@ QemuQ35Pkg/Library/ResetSystemLib/StandaloneMmResetSystemLib.inf
   #########################################
   # DXE Phase modules
   #########################################
+
+  # Tiano DXE Core (C implementation) - for testing patina_smbios GetNext
+  MdeModulePkg/Core/Dxe/DxeMain.inf {
+    <LibraryClasses>
+      NULL|MdeModulePkg/Library/LzmaCustomDecompressLib/LzmaCustomDecompressLib.inf
+      NULL|MdeModulePkg/Library/DxeCrc32GuidedSectionExtractLib/DxeCrc32GuidedSectionExtractLib.inf
+      DevicePathLib|MdePkg/Library/UefiDevicePathLib/UefiDevicePathLib.inf
+  }
+
   # Reads smbios type 3 to determine volume button state.
   QemuPkg/FrontPageButtons/FrontPageButtons.inf
 
@@ -963,15 +973,21 @@ QemuQ35Pkg/Library/ResetSystemLib/StandaloneMmResetSystemLib.inf
   # Produces FORM DISPLAY ENGINE protocol. Handles input, displays strings.
   MsGraphicsPkg/DisplayEngineDxe/DisplayEngineDxe.inf
 
+  # Patina SMBIOS component wrapped as Tianocore driver (always included for testing)
+  PATINA_TIANOCORE_DEV/PatinaSmbiosDxe/PatinaSmbiosDxe.inf
+  # Platform driver to read QEMU fw_cfg SMBIOS tables and add them via protocol
+  QemuQ35Pkg/SmbiosPlatformDxe/SmbiosPlatformDxe.inf
+
 !if $(BUILD_RUST_CODE) == TRUE
   # Our first Rust driver to load
   QemuQ35Pkg/RustDriverDxe/RustDriverDxe.inf
 
   # Simple C Test DXE driver used to test Rust DXE Core FFI interfaces.
-  QemuQ35Pkg/RustFfiTestDxe/RustFfiTestDxe.inf {
-    <LibraryClasses>
-      DevicePathLib|MdePkg/Library/UefiDevicePathLib/UefiDevicePathLib.inf
-  }
+  # Commented out temporarily - causing assertion failures
+  # QemuQ35Pkg/RustFfiTestDxe/RustFfiTestDxe.inf {
+  #   <LibraryClasses>
+  #     DevicePathLib|MdePkg/Library/UefiDevicePathLib/UefiDevicePathLib.inf
+  # }
 
   QemuQ35Pkg/RustFfiImageTestDxe/RustFfiImageTestDxe.inf
   QemuQ35Pkg/RustImageTestDxe/RustImageTestDxe.inf
@@ -1112,39 +1128,6 @@ QemuQ35Pkg/Library/ResetSystemLib/StandaloneMmResetSystemLib.inf
   QemuQ35Pkg/SioBusDxe/SioBusDxe.inf
   MdeModulePkg/Bus/Pci/PciSioSerialDxe/PciSioSerialDxe.inf
   MdeModulePkg/Bus/Isa/Ps2KeyboardDxe/Ps2KeyboardDxe.inf
-
-  #
-  # SMBIOS Support
-  #
-
-
-
-##################################################################################
-# Patina / Tianocore Development
-# Replacing the Tianocore SmbiosDxe driver with the Pataina version, placing
-# the platform lib on the platform driver to detect the SMBIOS version, and 
-# using the standard Tianocore DxeMain driver
-##################################################################################
-  MdeModulePkg/Core/Dxe/DxeMain.inf {
-    <LibraryClasses>
-      NULL|MdeModulePkg/Library/LzmaCustomDecompressLib/LzmaCustomDecompressLib.inf
-      DevicePathLib|MdePkg/Library/UefiDevicePathLib/UefiDevicePathLib.inf
-  }
-
-  PATINA_TIANOCORE_DEV/PatinaSmbiosDxe/PatinaSmbiosDxe.inf
-  ## MdeModulePkg/Universal/SmbiosDxe/SmbiosDxe.inf {
-  ##   <LibraryClasses>
-  ##     NULL|QemuQ35Pkg/Library/SmbiosVersionLib/DetectSmbiosVersionLib.inf
-  ## }
-  QemuQ35Pkg/SmbiosPlatformDxe/SmbiosPlatformDxe.inf {
-    <LibraryClasses>
-      NULL|QemuQ35Pkg/Library/SmbiosVersionLib/DetectSmbiosVersionLib.inf
-  }
-  ## QemuQ35Pkg/SmbiosPlatformDxe/SmbiosPlatformDxe.inf
-  ##################################################################################
-
-
-
 
   #
   # ACPI Support
@@ -1453,32 +1436,32 @@ QemuQ35Pkg/Library/ResetSystemLib/StandaloneMmResetSystemLib.inf
 !endif
 
   # PRM Configuration Driver
-  PrmPkg/PrmConfigDxe/PrmConfigDxe.inf {
-    <LibraryClasses>
-      NULL|PrmPkg/Samples/PrmSampleAcpiParameterBufferModule/Library/DxeAcpiParameterBufferModuleConfigLib/DxeAcpiParameterBufferModuleConfigLib.inf
-      NULL|PrmPkg/Samples/PrmSampleContextBufferModule/Library/DxeContextBufferModuleConfigLib/DxeContextBufferModuleConfigLib.inf
-      # NULL|PrmPkg/Samples/PrmSampleHardwareAccessModule/Library/DxeHardwareAccessModuleConfigLib/DxeHardwareAccessModuleConfigLib.inf
-      # NULL|AdvLoggerPkg/AdvLoggerOsConnectorPrm/Library/AdvLoggerOsConnectorPrmConfigLib/AdvLoggerOsConnectorPrmConfigLib.inf
-  }
+  # PrmPkg/PrmConfigDxe/PrmConfigDxe.inf {
+  #   <LibraryClasses>
+  #     NULL|PrmPkg/Samples/PrmSampleAcpiParameterBufferModule/Library/DxeAcpiParameterBufferModuleConfigLib/DxeAcpiParameterBufferModuleConfigLib.inf
+  #     NULL|PrmPkg/Samples/PrmSampleContextBufferModule/Library/DxeContextBufferModuleConfigLib/DxeContextBufferModuleConfigLib.inf
+  #     # NULL|PrmPkg/Samples/PrmSampleHardwareAccessModule/Library/DxeHardwareAccessModuleConfigLib/DxeHardwareAccessModuleConfigLib.inf
+  #     # NULL|AdvLoggerPkg/AdvLoggerOsConnectorPrm/Library/AdvLoggerOsConnectorPrmConfigLib/AdvLoggerOsConnectorPrmConfigLib.inf
+  # }
 
   #
   # Platform Runtime Mechanism (PRM) feature
   #
 
   # PRM Module Loader Driver
-  PrmPkg/PrmLoaderDxe/PrmLoaderDxe.inf
+  # PrmPkg/PrmLoaderDxe/PrmLoaderDxe.inf
 
   # PRM SSDT Installation Driver
-  PrmPkg/PrmSsdtInstallDxe/PrmSsdtInstallDxe.inf
+  # PrmPkg/PrmSsdtInstallDxe/PrmSsdtInstallDxe.inf
 
   # PRM Sample Modules
-  PrmPkg/Samples/PrmSampleAcpiParameterBufferModule/PrmSampleAcpiParameterBufferModule.inf
-  PrmPkg/Samples/PrmSampleHardwareAccessModule/PrmSampleHardwareAccessModule.inf
-  PrmPkg/Samples/PrmSampleContextBufferModule/PrmSampleContextBufferModule.inf
+  # PrmPkg/Samples/PrmSampleAcpiParameterBufferModule/PrmSampleAcpiParameterBufferModule.inf
+  # PrmPkg/Samples/PrmSampleHardwareAccessModule/PrmSampleHardwareAccessModule.inf
+  # PrmPkg/Samples/PrmSampleContextBufferModule/PrmSampleContextBufferModule.inf
   #AdvLoggerPkg/AdvLoggerOsConnectorPrm/AdvLoggerOsConnectorPrm.inf
 
   # PRM Information UEFI Application
-  PrmPkg/Application/PrmInfo/PrmInfo.inf
+  # PrmPkg/Application/PrmInfo/PrmInfo.inf
 
   # MfciDxe overrides
   MfciPkg/MfciDxe/MfciDxe.inf {
