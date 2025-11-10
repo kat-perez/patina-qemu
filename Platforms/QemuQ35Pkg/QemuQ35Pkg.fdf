@@ -144,10 +144,10 @@ FV = SECFV
 
 [FD.MEMFD]
 BaseAddress   = $(MEMFD_BASE_ADDRESS)
-Size          = 0xE00000
+Size          = 0x1000000
 ErasePolarity = 1
 BlockSize     = 0x10000
-NumBlocks     = 0xE0
+NumBlocks     = 0x100
 
 0x000000|0x006000
 gUefiQemuQ35PkgTokenSpaceGuid.PcdOvmfSecPageTablesBase|gUefiQemuQ35PkgTokenSpaceGuid.PcdOvmfSecPageTablesSize
@@ -162,11 +162,11 @@ gUefiQemuQ35PkgTokenSpaceGuid.PcdSecPeiTemporaryRamBase|gUefiQemuQ35PkgTokenSpac
 gUefiQemuQ35PkgTokenSpaceGuid.PcdOvmfPeiMemFvBase|gUefiQemuQ35PkgTokenSpaceGuid.PcdOvmfPeiMemFvSize
 FV = PEIFV
 
-0x100000|0xAE0000
+0x100000|0xB00000
 gUefiQemuQ35PkgTokenSpaceGuid.PcdOvmfDxeMemFvBase|gUefiQemuQ35PkgTokenSpaceGuid.PcdOvmfDxeMemFvSize
 FV = DXEFV
 
-0xBE0000|0x220000
+0xC00000|0x250000
 gUefiQemuQ35PkgTokenSpaceGuid.PcdOvmfRustDxeMemFvBase|gUefiQemuQ35PkgTokenSpaceGuid.PcdOvmfRustDxeMemFvSize
 FV = RUST_DXE_CORE
 
@@ -302,17 +302,24 @@ READ_LOCK_CAP      = TRUE
 READ_LOCK_STATUS   = TRUE
 
 #
-# Use externally built Rust DXE core binary
+# Use C-based Tianocore DXE core for testing patina_smbios GetNext
 #
+INF  MdeModulePkg/Core/Dxe/DxeMain.inf
 
 INF  MdeModulePkg/Universal/PCD/Dxe/Pcd.inf
+
+# Patina SMBIOS component wrapped as Tianocore driver (always included for testing)
+INF  PATINA_TIANOCORE_DEV/PatinaSmbiosDxe/PatinaSmbiosDxe.inf
+# Platform driver to read QEMU fw_cfg SMBIOS tables and add them via protocol
+INF  QemuQ35Pkg/SmbiosPlatformDxe/SmbiosPlatformDxe.inf
 
 !if $(BUILD_RUST_CODE) == TRUE
 # Simple pure Rust DXE driver that is loaded by Rust DXE Core
 INF  QemuQ35Pkg/RustDriverDxe/RustDriverDxe.inf
 
 # Simple C Test DXE driver used to test Rust DXE Core FFI interfaces.
-INF  QemuQ35Pkg/RustFfiTestDxe/RustFfiTestDxe.inf
+# Commented out temporarily - causing assertion failures
+# INF  QemuQ35Pkg/RustFfiTestDxe/RustFfiTestDxe.inf
 INF  QemuQ35Pkg/RustFfiImageTestDxe/RustFfiImageTestDxe.inf
 !endif
 
@@ -379,19 +386,6 @@ INF  MdeModulePkg/Universal/MemoryTest/NullMemoryTestDxe/NullMemoryTestDxe.inf
 
 INF  QemuQ35Pkg/SioBusDxe/SioBusDxe.inf
 INF  MdeModulePkg/Bus/Isa/Ps2KeyboardDxe/Ps2KeyboardDxe.inf
-
-
-
-##################################################################################
-# Patina / Tianocore Development
-# Replacing the Tianocore SmbiosDxe driver with the Pataina version
-##################################################################################
-INF PATINA_TIANOCORE_DEV/PatinaSmbiosDxe/PatinaSmbiosDxe.inf
-## INF  MdeModulePkg/Universal/SmbiosDxe/SmbiosDxe.inf
-##################################################################################
-INF  QemuQ35Pkg/SmbiosPlatformDxe/SmbiosPlatformDxe.inf
-
-
 
 INF  MdeModulePkg/Universal/Acpi/AcpiTableDxe/AcpiTableDxe.inf
 INF  QemuQ35Pkg/AcpiPlatformDxe/AcpiPlatformDxe.inf
@@ -550,19 +544,19 @@ INF  MsCorePkg/AcpiRGRT/AcpiRgrt.inf
 !endif
 
 # PRM Configuration Driver
-INF PrmPkg/PrmConfigDxe/PrmConfigDxe.inf
+# INF PrmPkg/PrmConfigDxe/PrmConfigDxe.inf
 
 # PRM Sample Modules
-INF PrmPkg/Samples/PrmSampleAcpiParameterBufferModule/PrmSampleAcpiParameterBufferModule.inf
+# INF PrmPkg/Samples/PrmSampleAcpiParameterBufferModule/PrmSampleAcpiParameterBufferModule.inf
 #INF PrmPkg/Samples/PrmSampleHardwareAccessModule/PrmSampleHardwareAccessModule.inf
-INF PrmPkg/Samples/PrmSampleContextBufferModule/PrmSampleContextBufferModule.inf
+# INF PrmPkg/Samples/PrmSampleContextBufferModule/PrmSampleContextBufferModule.inf
 #INF AdvLoggerPkg/AdvLoggerOsConnectorPrm/AdvLoggerOsConnectorPrm.inf
 
 # PRM Module Loader Driver
-INF PrmPkg/PrmLoaderDxe/PrmLoaderDxe.inf
+# INF PrmPkg/PrmLoaderDxe/PrmLoaderDxe.inf
 
 # PRM SSDT Installation Driver
-INF PrmPkg/PrmSsdtInstallDxe/PrmSsdtInstallDxe.inf
+# INF PrmPkg/PrmSsdtInstallDxe/PrmSsdtInstallDxe.inf
 
 FILE FREEFORM = PCD(gDfciPkgTokenSpaceGuid.PcdDfciTimerFile) {
     SECTION RAW = DfciPkg/Include/Resources/DfciWorking.bmp
@@ -577,7 +571,8 @@ FILE FREEFORM = PCD(gZeroTouchPkgTokenSpaceGuid.PcdZeroTouchCertificateFile) {
   INF MsGraphicsPkg/RenderingEngineDxe/RenderingEngineDxe.inf
   INF MsGraphicsPkg/DisplayEngineDxe/DisplayEngineDxe.inf
   INF OemPkg/BootMenu/BootMenu.inf
-  INF QemuPkg/FrontPageButtons/FrontPageButtons.inf
+  # Temporarily disabled to avoid GetNext hang
+  # INF QemuPkg/FrontPageButtons/FrontPageButtons.inf
   INF OemPkg/FrontPage/FrontPage.inf
   INF PcBdsPkg/MsBootPolicy/MsBootPolicy.inf
   INF MdeModulePkg/Universal/BootManagerPolicyDxe/BootManagerPolicyDxe.inf
@@ -666,19 +661,22 @@ READ_STATUS         = TRUE
 READ_LOCK_CAP       = TRUE
 READ_LOCK_STATUS    = TRUE
 
-INF  MdeModulePkg/Core/Dxe/DxeMain.inf
-###   FILE DXE_CORE = 23C9322F-2AF2-476A-BC4C-26BC88266C71 {
-###   !ifdef $(DXE_CORE_BINARY_OVERRIDE)
-###     SECTION PE32 = $(DXE_CORE_BINARY_OVERRIDE)                                 # User defined override
-###   !else
-###     !if $(TARGET) == RELEASE
-###       SECTION PE32 = $(DXE_CORE_NUGET_FEED_PATH)/release/qemu_q35_dxe_core.efi # Nuget feed release build
-###     !else
-###       SECTION PE32 = $(DXE_CORE_NUGET_FEED_PATH)/debug/qemu_q35_dxe_core.efi   # Nuget feed debug build
-###     !endif
-###   !endif
-###     SECTION UI = "DxeCore"
-###   }
+# Using Tiano DXE Core (C implementation) for testing
+INF MdeModulePkg/Core/Dxe/DxeMain.inf
+
+# Patina Rust DXE Core - commented out for Tiano testing
+#FILE DXE_CORE = 23C9322F-2AF2-476A-BC4C-26BC88266C71 {
+#!ifdef $(DXE_CORE_BINARY_OVERRIDE)
+#  SECTION PE32 = $(DXE_CORE_BINARY_OVERRIDE)                                 # User defined override
+#!else
+#  !if $(TARGET) == RELEASE
+#    SECTION PE32 = $(DXE_CORE_NUGET_FEED_PATH)/release/qemu_q35_dxe_core.efi # Nuget feed release build
+#  !else
+#    SECTION PE32 = $(DXE_CORE_NUGET_FEED_PATH)/debug/qemu_q35_dxe_core.efi   # Nuget feed debug build
+#  !endif
+#!endif
+#  SECTION UI = "DxeCore"
+#}
 
 ################################################################################
 

@@ -8,8 +8,12 @@ name = "PatinaSmbiosDxe"
 path = "src/main.rs"
 
 [dependencies]
+log = {workspace=true}
 r-efi = {workspace=true}
 RustAdvancedLoggerDxe = {workspace=true}
 RustBootServicesAllocatorDxe = {workspace=true}
-patina = "14.3.2"
-patina_smbios = "14.3.2"
+
+# Using crates.io versions by default
+# Patched at workspace root to use kat-perez fork with smbios-ref-cell-type-127 branch
+patina = "14"
+patina_smbios = "14"

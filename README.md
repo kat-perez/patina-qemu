@@ -39,6 +39,92 @@ This repo contains a copy of the patina-qemu tree with the following changes:
 * Enable the Tiano DXE core
 * Add a ```/Platforms/PATINA_TIANOCORE_DEV/PatinaSmbiosDxe``` driver
 
-The new driver is written in Rust and demonstrates how to use and publish normal Tianocore interfaces while using a Patina component.  Build and test is done by running through the steps outlined in QemuReadme.md (the original readme.md file from this repo).
+The new driver is written in Rust and demonstrates how to use and publish normal Tianocore interfaces while using a Patina component.
+
+### Building and Running with PatinaSmbiosDxe
+
+The PatinaSmbiosDxe driver is a Rust-based UEFI DXE driver that wraps the Patina SMBIOS component to provide SMBIOS functionality within the Tianocore DXE environment. This driver demonstrates how to integrate Patina components with the standard Tianocore build system.
+
+#### Prerequisites
+
+Follow the setup instructions in [QemuReadme.md](./QemuReadme.md) to ensure all required tools are installed:
+- Rust toolchain with `x86_64-unknown-uefi` target
+- Python 3 with virtual environment support
+- Stuart build tools (installed via pip-requirements.txt)
+- QEMU for testing
+
+#### Building PatinaSmbiosDxe
+
+The PatinaSmbiosDxe driver is included in the standard QemuQ35Pkg build process as a Rust module. The driver is located at `Platforms/PATINA_TIANOCORE_DEV/PatinaSmbiosDxe/`.
+
+**Build Steps:**
+
+1. **Setup Python Virtual Environment:**
+   ```bash
+   # Windows
+   python -m venv q35env
+   q35env\Scripts\activate.bat
+
+   # Linux/WSL
+   python -m venv q35env
+   source q35env/bin/activate
+   ```
+
+2. **Install Build Prerequisites:**
+   ```bash
+   pip install --upgrade -r pip-requirements.txt
+   ```
+
+3. **Run Stuart Setup:**
+   ```bash
+   stuart_setup -c Platforms/QemuQ35Pkg/PlatformBuild.py
+   ```
+
+4. **Run Stuart Update:**
+   ```bash
+   stuart_update -c Platforms/QemuQ35Pkg/PlatformBuild.py
+   ```
+   Note: Retry if you encounter "Filename too long" errors.
+
+5. **Build and Launch:**
+   ```bash
+   # Windows
+   stuart_build -c Platforms/QemuQ35Pkg/PlatformBuild.py --flashrom
+
+   # Linux/WSL
+   stuart_build -c Platforms/QemuQ35Pkg/PlatformBuild.py TOOL_CHAIN_TAG=CLANGPDB --flashrom
+   ```
+
+#### What PatinaSmbiosDxe Does
+
+The driver performs the following operations:
+1. Initializes a Patina component storage area
+2. Provides boot services access to the Patina component
+3. Creates an SMBIOS provider component with version 3.9
+4. Initializes and runs the SMBIOS component, which:
+   - Installs the SMBIOS protocol (GUID: 03583FF6-CB36-4940-947E-B9B39F4AFAF7)
+   - Publishes the initial SMBIOS table
+   - Integrates QEMU's SMBIOS table data into the UEFI environment
+
+#### Verifying SMBIOS Integration
+
+When QEMU launches, check the debug log for these messages:
+- `PatinaSmbiosDxe Entry` - Driver has started
+- `SMBIOS component initialized, protocol installed, and table published successfully` - Successful initialization
+- Look for `InstallProtocolInterface: 03583FF6-CB36-4940-947E-B9B39F4AFAF7` from the DXE core
+
+You can also verify SMBIOS data is available by using the `smbiosview` command in the UEFI shell.
+
+#### Cargo Workspace Integration
+
+The PatinaSmbiosDxe driver is part of the Cargo workspace defined in the root `Cargo.toml`. The workspace includes:
+```toml
+members = [
+    "Platforms/PATINA_TIANOCORE_DEV/PatinaSmbiosDxe",
+    # ... other members
+]
+```
+
+This allows for unified dependency management and enables running `cargo build` or `cargo test` from the repository root to build all Rust components together.
 
 Note that this method of using the patina-smbios driver does not follow the spirit intended by the Patina project, so this repository will never go public and is only intended as an example of how to transition from the Tiano build environment to the Patina environment in small incremental steps.
