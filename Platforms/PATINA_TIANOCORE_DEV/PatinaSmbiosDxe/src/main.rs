@@ -28,7 +28,7 @@ mod uefi_entry {
     };
     use patina_smbios::component::SmbiosProvider;
     use r_efi::efi::Status;
-    use rust_advanced_logger_dxe::{debugln, init_debug, DEBUG_ERROR, DEBUG_INFO};
+    use rust_advanced_logger_dxe::init_debug;
 
     #[no_mangle]
     pub extern "efiapi" fn efi_main(
@@ -44,42 +44,36 @@ mod uefi_entry {
             }
         );
 
-        // Setup logging for this driver.  The advanced logger is currently being used so that we can
-        // use the debug flags such as `DEBUG_INFO`, but any logging crate that supports no_std can be used.
+        // Setup logging for this driver using the log crate bridge
         unsafe {
             init_debug((*system_table).boot_services);
         }
-        debugln!(DEBUG_INFO, "PatinaSmbiosDxe Entry");
+        log::info!("PatinaSmbiosDxe Entry");
 
-        // Test if log crate bridge is working
-        log::info!("TEST: log crate bridge is working!");
-        log::debug!("TEST: debug level log");
-        log::error!("TEST: error level log");
-
-        debugln!(DEBUG_INFO, "Creating Storage...");
+        log::info!("Creating Storage...");
         // Create a Patina component storage area
         let mut storage = Storage::new();
-        debugln!(DEBUG_INFO, "Storage created successfully");
+        log::info!("Storage created successfully");
 
-        debugln!(DEBUG_INFO, "Setting boot services...");
+        log::info!("Setting boot services...");
         // Provide boot services access to the storage area
         storage.set_boot_services(
             StandardBootServices::new(
                 unsafe { system_table.as_ref().unwrap().boot_services.as_ref().unwrap() }
             )
         );
-        debugln!(DEBUG_INFO, "Boot services set successfully");
+        log::info!("Boot services set successfully");
 
-        debugln!(DEBUG_INFO, "Creating SmbiosProvider...");
+        log::info!("Creating SmbiosProvider...");
         // Create the SMBIOS component with version 3.9 and convert to component
         let smbios_provider = SmbiosProvider::new(3, 9);
-        debugln!(DEBUG_INFO, "SmbiosProvider created, converting to component...");
+        log::info!("SmbiosProvider created, converting to component...");
         let mut smbios_component = smbios_provider.into_component();
-        debugln!(DEBUG_INFO, "Component conversion complete");
+        log::info!("Component conversion complete");
 
-        debugln!(DEBUG_INFO, "Initializing SMBIOS component...");
+        log::info!("Initializing SMBIOS component...");
         smbios_component.initialize(&mut storage);
-        debugln!(DEBUG_INFO, "Component initialized, running component...");
+        log::info!("Component initialized, running component...");
 
         // Run the component, which initializes the manager, installs the SMBIOS protocol,
         // and publishes the initial SMBIOS table
@@ -88,11 +82,11 @@ mod uefi_entry {
                 // In the log, the line prior to this should state:
                 // INFO - InstallProtocolInterface: 03583FF6-CB36-4940-947E-B9B39F4AFAF7
                 // This is from the Tiano DXE core indicating the SMBIOS protocol was installed
-                debugln!(DEBUG_INFO, "SMBIOS component initialized, protocol installed, and table published successfully");
+                log::info!("SMBIOS component initialized, protocol installed, and table published successfully");
                 Status::SUCCESS.as_usize() as u64
             }
             Err(e) => {
-                debugln!(DEBUG_ERROR, "SMBIOS component failed with error: {:?}", e);
+                log::error!("SMBIOS component failed with error: {:?}", e);
                 Status::LOAD_ERROR.as_usize() as u64
             }
         }

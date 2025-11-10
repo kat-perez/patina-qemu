@@ -127,4 +127,40 @@ members = [
 
 This allows for unified dependency management and enables running `cargo build` or `cargo test` from the repository root to build all Rust components together.
 
+#### Updating an Existing Checkout
+
+If you have an existing checkout and need to update to the latest changes:
+
+```bash
+# Pull the latest changes
+git pull
+
+# Sync submodule URLs and branches to match .gitmodules
+git submodule sync
+
+# Update all submodules to the commits specified in the repository
+git submodule update --init --recursive
+
+# Alternatively, update to the latest commit on tracked branches
+git submodule update --init --recursive --remote
+```
+
+**If you have local changes in submodules:**
+```bash
+# Save local changes in the submodule (e.g., Common/MU)
+cd Common/MU
+git stash
+cd ../..
+
+# Update submodules
+git submodule update --init --recursive
+
+# Optionally restore changes
+cd Common/MU
+git stash pop
+cd ../..
+```
+
+After updating submodules, re-run the build steps starting from step 3 (Stuart Setup).
+
 Note that this method of using the patina-smbios driver does not follow the spirit intended by the Patina project, so this repository will never go public and is only intended as an example of how to transition from the Tiano build environment to the Patina environment in small incremental steps.
