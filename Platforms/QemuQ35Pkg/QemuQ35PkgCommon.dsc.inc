@@ -975,6 +975,8 @@ QemuQ35Pkg/Library/ResetSystemLib/StandaloneMmResetSystemLib.inf
 
   # Patina SMBIOS component wrapped as Tianocore driver (always included for testing)
   PATINA_TIANOCORE_DEV/PatinaSmbiosDxe/PatinaSmbiosDxe.inf
+  # Patina Smbios Reentrancy Test
+  PATINA_TIANOCORE_DEV/SmbiosReentrancyTestDxe/SmbiosReentrancyTestDxe.inf
   # Platform driver to read QEMU fw_cfg SMBIOS tables and add them via protocol
   QemuQ35Pkg/SmbiosPlatformDxe/SmbiosPlatformDxe.inf
 

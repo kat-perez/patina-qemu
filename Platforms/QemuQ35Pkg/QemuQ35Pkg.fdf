@@ -310,6 +310,8 @@ INF  MdeModulePkg/Universal/PCD/Dxe/Pcd.inf
 
 # Patina SMBIOS component wrapped as Tianocore driver (always included for testing)
 INF  PATINA_TIANOCORE_DEV/PatinaSmbiosDxe/PatinaSmbiosDxe.inf
+# Smbios Reentrancy Test
+INF PATINA_TIANOCORE_DEV/SmbiosReentrancyTestDxe/SmbiosReentrancyTestDxe.inf
 # Platform driver to read QEMU fw_cfg SMBIOS tables and add them via protocol
 INF  QemuQ35Pkg/SmbiosPlatformDxe/SmbiosPlatformDxe.inf
 

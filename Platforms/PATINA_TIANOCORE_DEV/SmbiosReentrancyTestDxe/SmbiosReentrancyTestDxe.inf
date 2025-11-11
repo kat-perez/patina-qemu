@@ -1,0 +1,26 @@
+### @file
+# SMBIOS RefCell Reentrancy Stress Test Driver
+#
+# This driver stresses the SMBIOS protocol with timer interrupts at TPL_NOTIFY
+# to detect potential RefCell reentrancy issues.
+#
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# SPDX-License-Identifier: MIT License
+###
+
+[Defines]
+  INF_VERSION     = 1.27
+  BASE_NAME       = SmbiosReentrancyTestDxe
+  FILE_GUID       = 7E8B6C2A-9F3D-4A1E-8D5C-1B2A3C4D5E6F
+  MODULE_TYPE     = DXE_DRIVER
+  RUST_MODULE     = TRUE
+
+[Sources]
+  Cargo.toml
+
+[Packages]
+  MdePkg/MdePkg.dec
+  MdeModulePkg/MdeModulePkg.dec
+
+[Depex]
+  gEfiSmbiosProtocolGuid

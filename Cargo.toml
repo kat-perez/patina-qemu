@@ -6,6 +6,7 @@ members = [
     "Platforms/QemuQ35Pkg/RustDriverDxe",
     "Platforms/QemuQ35Pkg/RustImageTestDxe",
     "Platforms/PATINA_TIANOCORE_DEV/PatinaSmbiosDxe",
+    "Platforms/PATINA_TIANOCORE_DEV/SmbiosReentrancyTestDxe",
     "Common/MU/HidPkg/UefiHidDxe",
     "Common/MU/MsCorePkg/HelloWorldRustDxe",
 ]
@@ -58,7 +59,7 @@ opt-level = 3
 [profile.test]
 opt-level = 0
 
-# Patch to use kat-perez fork with smbios-ref-cell-type-127 branch
+# Patch to use local patina with instrumentation
 [patch.crates-io]
-patina = { git = "https://github.com/kat-perez/patina.git", branch = "smbios-ref-cell-type-127" }
-patina_smbios = { git = "https://github.com/kat-perez/patina.git", branch = "smbios-ref-cell-type-127" }
+patina = { path = "/home/katperez/current/smbios/patina/sdk/patina" }
+patina_smbios = { path = "/home/katperez/current/smbios/patina/components/patina_smbios" }
