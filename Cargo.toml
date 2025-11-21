@@ -60,5 +60,5 @@ opt-level = 0
 
 # Patch to use kat-perez fork with smbios-ref-cell-type-127 branch
 [patch.crates-io]
-patina = { git = "https://github.com/kat-perez/patina.git", branch = "smbios-ref-cell-type-127" }
-patina_smbios = { git = "https://github.com/kat-perez/patina.git", branch = "smbios-ref-cell-type-127" }
+patina = { git = "https://github.com/kat-perez/patina.git", branch = "smbios-bisect" }
+patina_smbios = { git = "https://github.com/kat-perez/patina.git", branch = "smbios-bisect" }

@@ -15,5 +15,5 @@ RustBootServicesAllocatorDxe = {workspace=true}
 
 # Using crates.io versions by default
 # Patched at workspace root to use kat-perez fork with smbios-ref-cell-type-127 branch
-patina = "14"
-patina_smbios = "14"
+patina = "16"
+patina_smbios = "16"
