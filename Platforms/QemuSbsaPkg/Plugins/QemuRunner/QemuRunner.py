@@ -111,9 +111,8 @@ class QemuRunner(uefi_helper_plugin.IUefiHelperPlugin):
         else:
             logging.critical("Virtual Drive Path Invalid")
 
-        # TODO: Set the memory size to be 2GB regardless. Not sure why 8GB does
-        # not work.
-        args += " -m 2048"
+        # Increased to 4GB for Windows 11 ARM64
+        args += " -m 4096"
 
         args += " -machine sbsa-ref" #,accel=(tcg|kvm)"
         args += " -cpu max,sve=off,sme=off"
