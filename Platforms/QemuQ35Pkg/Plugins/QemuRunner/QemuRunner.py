@@ -95,7 +95,6 @@ class QemuRunner(uefi_helper_plugin.IUefiHelperPlugin):
         qemu_accelerator = QemuRunner.GetStr(env, "QEMU_ACCEL")
         qemu_executable_path = QemuRunner.GetStr(env, "QEMU_PATH")
         qemu_ext_dep_dir = QemuRunner.GetStr(env, "QEMU_DIR")
-        repo_version = QemuRunner.GetStr(env, "VERSION", "Unknown")
         serial_port = QemuRunner.GetStr(env, "SERIAL_PORT", "50001")
         shutdown_after_run = QemuRunner.GetBool(env, "SHUTDOWN_AFTER_RUN", False)
         smm_enabled = QemuRunner.GetBuildBool(env, "SMM_ENABLED", True)
@@ -155,26 +154,6 @@ class QemuRunner(uefi_helper_plugin.IUefiHelperPlugin):
             .with_virtual_drive(None if path_to_os else virtual_drive)
             .with_display(not headless)
             .with_network(forward_ports, use_virtio)
-            .with_smbios(
-                smbios_values={
-                    # Type 0 (BIOS Information)
-                    "smbios0_vendor": "Patina",
-                    "smbios0_version": repo_version,
-                    # Type 1 (System Information)
-                    "smbios1_manufacturer": "OpenDevicePartnership",
-                    "smbios1_product": "QEMU Q35",
-                    "smbios1_family": "QEMU",
-                    "smbios1_version": str.join(".", qemu_version),
-                    "smbios1_serial": "42-42-42-42",
-                    "smbios1_uuid": "99fb60e2-181c-413a-a3cf-0a5fea8d87b0",
-                    # Type 3 (Chassis Information)
-                    "smbios3_manufacturer": "OpenDevicePartnership",
-                    "smbios3_serial": "40-41-42-43",
-                    "smbios3_asset": "Q35",
-                    "smbios3_sku": "Q35",
-                    "smbios3_version": boot_selection,
-                }
-            )
             .with_tpm(tpm_dev)
             .with_gdb_server(gdb_server_port)
             .with_serial_port(serial_port)
