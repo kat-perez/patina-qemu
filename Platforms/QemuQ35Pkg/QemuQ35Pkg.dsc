@@ -951,10 +951,7 @@ QemuQ35Pkg/Library/ResetSystemLib/StandaloneMmResetSystemLib.inf
   MdeModulePkg/Universal/Metronome/Metronome.inf
   PcAtChipsetPkg/PcatRealTimeClockRuntimeDxe/PcatRealTimeClockRuntimeDxe.inf
   MdeModulePkg/Universal/DriverHealthManagerDxe/DriverHealthManagerDxe.inf
-  MdeModulePkg/Universal/BdsDxe/BdsDxe.inf {
-    <PcdsDynamicExDefault>
-      gMsGraphicsPkgTokenSpaceGuid.PcdPostBackgroundColoringSkipCount|0
-  }
+  # BdsDxe removed — BDS arch protocol now provided by Patina BootDispatcher in the Rust DXE Core
 
   QemuQ35Pkg/QemuKernelLoaderFsDxe/QemuKernelLoaderFsDxe.inf {
     <LibraryClasses>

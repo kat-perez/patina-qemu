@@ -339,7 +339,7 @@ INF  MdeModulePkg/Universal/Console/GraphicsConsoleDxe/GraphicsConsoleDxe.inf
 INF  MdeModulePkg/Universal/Console/TerminalDxe/TerminalDxe.inf
 !endif
 INF  MdeModulePkg/Universal/DriverHealthManagerDxe/DriverHealthManagerDxe.inf
-INF  MdeModulePkg/Universal/BdsDxe/BdsDxe.inf
+# BdsDxe removed — BDS arch protocol now provided by Patina BootDispatcher in the Rust DXE Core
 # MU_CHANGE
 #INF  MdeModulePkg/Application/UiApp/UiApp.inf
 INF  QemuQ35Pkg/QemuKernelLoaderFsDxe/QemuKernelLoaderFsDxe.inf
