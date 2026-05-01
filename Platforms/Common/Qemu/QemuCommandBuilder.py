@@ -40,6 +40,7 @@ class QemuCommandBuilder:
         self._usb_mouse_added = False
         self._usb_keyboard_added = False
         self._usb_storage_index = 0
+        self._nvme_index = 0
         self._memory_added = False
         self._network_added = False
         self._smbios_added = False
@@ -237,6 +238,52 @@ class QemuCommandBuilder:
                     f"file=fat:rw:{drive_file},format={drive_format},media=disk,if=none,id={drive_id}",
                     "-device",
                     f"usb-storage,bus=usb.0,drive={drive_id}",
+                ]
+            )
+
+        return self
+
+    def with_nvme(self, drive_file, drive_id=None, drive_format="raw", serial=None):
+        """Add an NVMe controller and namespace backed by drive_file.
+
+        Args:
+            drive_file: Path to a backing file (raw image, qcow2, etc.) or a directory
+                mounted as a FAT filesystem.
+            drive_id: Optional QEMU drive id. Auto-generated if not provided.
+            drive_format: Drive image format. Default "raw"; use "qcow2" for qcow2 images.
+                Ignored when drive_file is a directory (FAT mount uses raw).
+            serial: NVMe serial number string. QEMU's nvme device requires one; an id
+                derived from the index is used when not specified.
+        """
+        if not drive_file:
+            return self
+
+        if not drive_id:
+            drive_id = f"nvme_{self._nvme_index}"
+        if not serial:
+            serial = f"NVMe-{self._nvme_index}"
+        self._nvme_index += 1
+
+        self._logger.debug(
+            f"Adding NVMe device: {drive_file} (id={drive_id}, format={drive_format}, serial={serial})"
+        )
+
+        if os.path.isfile(drive_file):
+            self._args.extend(
+                [
+                    "-drive",
+                    f"file={drive_file},format={drive_format},if=none,id={drive_id}",
+                    "-device",
+                    f"nvme,drive={drive_id},serial={serial}",
+                ]
+            )
+        elif os.path.isdir(drive_file):
+            self._args.extend(
+                [
+                    "-drive",
+                    f"file=fat:rw:{drive_file},format=raw,if=none,id={drive_id}",
+                    "-device",
+                    f"nvme,drive={drive_id},serial={serial}",
                 ]
             )
 

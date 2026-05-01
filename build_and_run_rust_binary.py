@@ -131,6 +131,19 @@ def _parse_arguments() -> argparse.Namespace:
         help="Path to OS image to boot in QEMU.",
     )
     parser.add_argument(
+        "--nvme",
+        type=Path,
+        default=None,
+        help="Path to a file or directory to attach as a QEMU NVMe drive. "
+        "Use raw images, qcow2 (with --nvme-format qcow2), or a directory (mounted as FAT).",
+    )
+    parser.add_argument(
+        "--nvme-format",
+        type=str,
+        default="raw",
+        help="Format for the --nvme drive image. Default 'raw'.",
+    )
+    parser.add_argument(
         "--serial-port",
         "-s",
         type=int,
@@ -291,6 +304,7 @@ def _configure_settings(args: argparse.Namespace) -> Dict[str, Path]:
             .with_usb_controller()
             .with_usb_mouse()
             .with_storage(args.os, 'SSD')
+            .with_nvme(args.nvme, drive_format=args.nvme_format)
             .with_display(not args.headless)
             .with_network(enabled=False)
             .with_gdb_server(args.gdb_port)
@@ -404,6 +418,7 @@ def _configure_settings(args: argparse.Namespace) -> Dict[str, Path]:
             .with_usb_mouse()
             .with_usb_keyboard()
             .with_storage(args.os, 'HDD')
+            .with_nvme(args.nvme, drive_format=args.nvme_format)
             .with_display(not args.headless)
             .with_network(enabled=False)
             .with_gdb_server(args.gdb_port)
